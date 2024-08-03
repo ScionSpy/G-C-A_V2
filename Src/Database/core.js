@@ -138,7 +138,7 @@ module.exports = class Database {
         return await this.#__Open()
             .then((db) => {
                 DB = db;
-                return DB.db().collection(collection);
+                return DB.db().collection(this.collectionPrefix+collection);
             })
             .then((collection) => {
                 return collection.find(query).project(project).sort(sort).limit(Number(limit)).toArray();
@@ -169,7 +169,7 @@ module.exports = class Database {
         return await this.#__Open()
             .then((db) => {
                 DB = db;
-                return DB.db().collection(collection);
+                return DB.db().collection(this.collectionPrefix+collection);
             })
             .then(async (collection) => {
                 data.createdAt = Date.now();
@@ -201,7 +201,7 @@ module.exports = class Database {
         return await this.#__Open()
             .then((db) => {
                 DB = db;
-                return db.db().collection(collection);
+                return db.db().collection(this.collectionPrefix+collection);
             })
             .then((collection) => {
                 newData.lastModified = Date.now();
@@ -243,7 +243,7 @@ module.exports = class Database {
         return await this.#__Open()
             .then((db) => {
                 DB = db;
-                return DB.db().collection(collection);
+                return DB.db().collection(this.collectionPrefix+collection);
             })
             .then(async (collection) => {
                 return collection.deleteOne(query);
