@@ -27,8 +27,8 @@ module.exports = {
             const bot = message.client;
             const e = new MessageEmbed();
 
-            const output = eval(input);
-            response = buildSuccessResponse(output, message.client);
+            let output = eval(input);
+            response = await buildSuccessResponse(output, message.client);
         } catch (ex) {
             response = buildErrorResponse(ex);
         };
@@ -38,9 +38,13 @@ module.exports = {
     }
 };
 
-const buildSuccessResponse = (output, client) => {
+const buildSuccessResponse = async (output, client) => {
+
+    if (output && output.constructor.name == "Promise") output = await output;
+
+
     // Token protection
-    output = require("util").inspect(output, { depth: 0 }).replaceAll(client.token, DUMMY_TOKEN);
+    output = require("util").inspect(output, { depth: 1 }).replaceAll(client.token, DUMMY_TOKEN);
 
     /*const embed = new MessageEmbed()
         .setAuthor({ name: "📤 Output" })
