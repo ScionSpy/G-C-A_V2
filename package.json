@@ -18,6 +18,6 @@
   "homepage": "https://github.com/ScionSpy/G-C-A_V2#readme",
   "dependencies": {
     "discord.js": "^12.5.3",
-    "mongodb": "^4.10.0"
+    "mongodb": "^4.17.0"
   }
 }
