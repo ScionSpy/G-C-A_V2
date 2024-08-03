@@ -1,0 +1,66 @@
+const { readdirSync, lstatSync } = require("fs");
+const { join, extname } = require("path");
+
+module.exports = class Utils {
+
+    /**
+     * Checks if a string contains a URL
+     * @param {string} text
+     */
+    static containsLink(text) {
+        return /(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})/.test(
+            text
+        );
+    };
+
+    /**
+     * Checks if a string is a valid discord invite
+     * @param {string} text
+     */
+    static containsDiscordInvite(text) {
+        return /(https?:\/\/)?(www.)?(discord.(gg|io|me|li|link|plus)|discorda?p?p?.com\/invite|invite.gg|dsc.gg|urlcord.cf)\/[^\s/]+?(?=\b)/.test(
+            text
+        );
+    };
+
+    /**
+     * Returns a random number below a max
+     * @param {number} max
+     */
+    static getRandomInt(max) {
+        return Math.floor(Math.random() * max);
+    };
+
+    /**
+     * @param {import("discord.js").PermissionResolvable[]} perms
+     */
+    static parsePermissions(perms) {
+        const permissionWord = `permission${perms.length > 1 ? "s" : ""}`;
+        return "`" + perms.map((perm) => permissions[perm]).join(", ") + "` " + permissionWord;
+    }
+
+    /**
+     * Recursively searches for a file in a directory
+     * @param {string} dir
+     * @param {string[]} allowedExtensions
+     */
+    static recursiveReadDirSync(dir, allowedExtensions = [".js"]) {
+        const filePaths = [];
+        const readCommands = (dir) => {
+            const files = readdirSync(join(process.cwd(), dir));
+            files.forEach((file) => {
+                const stat = lstatSync(join(process.cwd(), dir, file));
+                if (stat.isDirectory()) {
+                    readCommands(join(dir, file));
+                } else {
+                    const extension = extname(file);
+                    if (!allowedExtensions.includes(extension)) return;
+                    const filePath = join(process.cwd(), dir, file);
+                    filePaths.push(filePath);
+                }
+            });
+        };
+        readCommands(dir);
+        return filePaths;
+    };
+};
