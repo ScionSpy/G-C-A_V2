@@ -2,6 +2,7 @@ const { MessageEmbed } = require("discord.js");
 const { OWNER_IDS, DEFAULT_PREFIX, EMBED_COLORS } = require("../../config");
 const { parsePermissions } = require("../Helpers/Utils");
 //const { timeformat } = require("@helpers/Utils");
+const { getSettings } = require("../../Database/Schemas/Guild.js");
 
 const cooldownCache = new Map();
 
@@ -10,12 +11,13 @@ module.exports = {
      * @param {import('discord.js').Message} message
      * @param {import("../Structures/Command")} cmd
      */
-    handlePrefixCommand: async function (message, cmd) {
-        const prefix = DEFAULT_PREFIX;
+    handlePrefixCommand: async function (message, cmd, settings) {
+        const prefix = settings.prefix;
         const args = message.content.replace(prefix, "").split(/\s+/);
         const invoke = args.shift().toLowerCase();
 
         const data = {};
+        data.settings = settings;
         data.prefix = prefix;
         data.invoke = invoke;
 

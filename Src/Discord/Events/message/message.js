@@ -1,6 +1,7 @@
-//const { commandHandler, automodHandler, statsHandler } = require("@src/handlers");
+//const { automodHandler, statsHandler } = require("@src/handlers");
 const { commandHandler } = require('../../Handlers');
 const config = require("../../../config");
+const { getSettings } = require("../../../Database/Schemas/Guild");
 
 /**
  * @param {import('../../Structures').BotClient} client
@@ -9,6 +10,7 @@ const config = require("../../../config");
 module.exports = async (client, message) => {
     if (message.author.bot) return;
     if (message.guild && message.guild.id !== config.SUPPORT_SERVER) return;
+    const settings = await getSettings(message.guild);
 
     // command handler
     let isCommand = false;
@@ -22,7 +24,7 @@ module.exports = async (client, message) => {
         const cmd = client.getCommand(invoke);
         if (cmd) {
             isCommand = true;
-            commandHandler.handlePrefixCommand(message, cmd);
+            commandHandler.handlePrefixCommand(message, cmd, settings);
         };
     };
 
