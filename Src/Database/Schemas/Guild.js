@@ -67,7 +67,8 @@ class _Guild {
 
         if (data[0]) {
             delete this.initializing;
-            for (const [key, value] in data[0]) {
+            for (const key in data[0]) {
+                const value = data[0][key];
                 this[key] = value;
             };
         };
