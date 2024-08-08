@@ -1,8 +1,8 @@
 const { MessageEmbed } = require("discord.js");
-const { EMBED_COLORS } = require("../../../../config");
+const { EMBED_COLORS } = require("../../../config");
 
 /**
- * @type {import("../../../Structures/Command")}
+ * @type {import("../../Structures/Command")}
  */
 module.exports = {
     name: "avatar",
@@ -23,7 +23,7 @@ module.exports = {
 /**
  * @param {import('discord.js').User} user
  */
-module.exports = (user) => {
+function avatarInfo (user){
     const x64 = user.displayAvatarURL({ extension: "png", size: 64 });
     const x128 = user.displayAvatarURL({ extension: "png", size: 128 });
     const x256 = user.displayAvatarURL({ extension: "png", size: 256 });

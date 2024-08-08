@@ -1,6 +1,6 @@
 const { MessageEmbed } = require("discord.js");
-const { EMBED_COLORS } = require("../../../../config");
-const { timeformat } = require("../../../Helpers/Utils");
+const { EMBED_COLORS } = require("../../../config");
+const { timeformat } = require("../../Helpers/Utils");
 const os = require("os");
 
 /**

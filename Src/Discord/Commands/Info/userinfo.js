@@ -1,8 +1,8 @@
 const { MessageEmbed } = require("discord.js");
-const { EMBED_COLORS } = require("../../../../config");
+const { EMBED_COLORS } = require("../../../config");
 
 /**
- * @type {import("../../../Structures/Command")}
+ * @type {import("../../Structures/Command")}
  */
 module.exports = {
     name: "userinfo",
@@ -25,7 +25,7 @@ module.exports = {
 /**
  * @param {import('discord.js').GuildMember} member
  */
-module.exports = (member) => {
+function userInfo(member){
     let color = member.displayHexColor;
     if (color === "#000000") color = EMBED_COLORS.BOT_EMBED;
 
@@ -64,7 +64,7 @@ module.exports = (member) => {
             },
             {
                 name: "Avatar-URL",
-                value: member.user.displayAvatarURL({ extension: "png", dynamic:true }),
+                value: member.user.displayAvatarURL({ extension: "png", dynamic: true }),
             }
         )
         .setFooter({ text: `Requested by ${member.user.tag}` })
