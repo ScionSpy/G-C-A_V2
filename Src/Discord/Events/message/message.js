@@ -19,8 +19,8 @@ module.exports = async (client, message) => {
         message.channel.reply(`> My prefix is \`${config.DEFAULT_PREFIX}\``);
     };
 
-    if (message.content && message.content.startsWith(config.DEFAULT_PREFIX)) {
-        const invoke = message.content.replace(`${config.DEFAULT_PREFIX}`, "").split(/\s+/)[0];
+    if (message.content && message.content.startsWith(settings.prefix)) {
+        const invoke = message.content.replace(`${settings.prefix}`, "").split(/\s+/)[0];
         const cmd = client.getCommand(invoke);
         if (cmd) {
             isCommand = true;
