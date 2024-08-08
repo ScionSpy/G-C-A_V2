@@ -9,7 +9,7 @@ const DUMMY_TOKEN = "SHADOW_TOKEN";
  */
 module.exports = {
     name: "eval",
-    aliases: [],
+    aliases: ["evald"],
     description: "evaluates something",
     category: "OWNER",
     enabled: true,
@@ -33,7 +33,7 @@ module.exports = {
             response = buildErrorResponse(ex);
         };
 
-        if(typeof response === "string") await message.channel.send(response, {code:'js', split:true});
+        if (typeof response === "string") await message.channel.send(response, { code: 'js', split: true });
         else await message.channel.send(response);
     }
 };
