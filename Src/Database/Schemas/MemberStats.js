@@ -3,6 +3,18 @@ const DB = require('../index.js');
 
 class DiscordMemberStats {
 
+    guild_id = undefined;
+    user_id = undefined;
+    messages = 0;
+    voice = {
+        connections: 0,
+        time: 0,
+    };
+    command_uses = 0;
+    code_displays = 0;
+    xp = 0;
+    level = 0;
+
     constructor() {
         this.initializing = true;
 
@@ -14,18 +26,6 @@ class DiscordMemberStats {
      */
     async create(options) {
         if (typeof options.guild_id !== "string" || typeof options.user_id !== "string") throw new Error(`User class constructor requires an ID! { guild_id:string, user_id:string };`);
-
-        this.guild_id = undefined;
-        this.user_id = undefined;
-        this.messages = 0;
-        this.voice = {
-            connections: 0,
-            time: 0,
-        };
-        this.command_uses = 0;
-        this.code_displays = 0;
-        this.xp = 0;
-        this.level = 0;
 
         for (let key in options) {
             this[key] = options[key];
@@ -42,7 +42,6 @@ class DiscordMemberStats {
         if (!query.user_id || typeof query.user_id !== "string") throw new Error(`DiscordMemberStats class function 'load' requires a query.user_id:string to execute! got ${typeof query.user_id}`);
 
         let data = await DB._Get("MemberStats", { guild_id: query.guild_id, user_id: query.user_id });
-console.log(data)
         if (data[0]) {
             delete this.initializing;
             for (const key in data[0]) {
