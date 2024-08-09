@@ -65,12 +65,12 @@ botstats = (client) => {
             },
             {
                 name: "Bot's RAM",
-                value: `\n❯ **Used:** ${botUsed}\n❯ **Available:** ${botAvailable}\n❯ **Usage:** ${botUsage}`,
+                value: `❯ **Used:** ${botUsed}\n❯ **Available:** ${botAvailable}\n❯ **Usage:** ${botUsage}`,
                 inline: true,
             },
             {
                 name: "Overall RAM",
-                value: stripIndent`\n❯ **Used:** ${overallUsed}\n❯ **Available:** ${overallAvailable}\n❯ **Usage:** ${overallUsage}\n`,
+                value: `❯ **Used:** ${overallUsed}\n❯ **Available:** ${overallAvailable}\n❯ **Usage:** ${overallUsage}\n`,
                 inline: true,
             },
             {

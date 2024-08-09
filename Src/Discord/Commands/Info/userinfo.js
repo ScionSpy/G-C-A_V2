@@ -33,10 +33,7 @@ function userInfo(member){
     if (rolesString.length > 1024) rolesString = rolesString.substring(0, 1020) + "...";
 
     const embed = new MessageEmbed()
-        .setAuthor({
-            name: `User information for ${member.displayName}`,
-            iconURL: member.user.displayAvatarURL(),
-        })
+        .setAuthor(`User information for ${member.displayName}`, member.user.displayAvatarURL({ dynamic: true, format: 'webp' }))
         .setThumbnail(member.user.displayAvatarURL())
         .setColor(color)
         .addFields(
@@ -64,10 +61,10 @@ function userInfo(member){
             },
             {
                 name: "Avatar-URL",
-                value: member.user.displayAvatarURL({ extension: "png", dynamic: true }),
+                value: member.user.displayAvatarURL({ dynamic: true, format: 'webp'}),
             }
         )
-        .setFooter({ text: `Requested by ${member.user.tag}` })
+        .setFooter(`Requested by ${member.user.tag}`)
         .setTimestamp(Date.now());
 
     return embed;
