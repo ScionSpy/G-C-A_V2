@@ -125,7 +125,7 @@ module.exports = class BotClient extends Client {
         let cmds = prettyArrays(clientCommands, 5);
         console.log(cmds);
 
-        console.log(`>> Loaded ${success + failed} events. Success (${success}) Failed (${failed})\n`);
+        console.log(`>> Loaded ${success + failed} commands. Success (${success}) Failed (${failed})\n`);
     };
 };
 
