@@ -2,7 +2,8 @@ require('dotenv').config();
 
 const { BotClient } = require("./Discord/Structures");
 
-
+// register extenders
+require("./Discord/Helpers/Extenders/Guild");
 
 
 // initialize client
