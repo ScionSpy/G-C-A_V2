@@ -51,12 +51,17 @@ module.exports = {
         if (oldChannel && !newChannel) {
             const statsDb = await getMemberStats(member.guild.id, member.id);
 
+            let time;
             if (voiceStates.has(member.id)) {
-                const time = now - voiceStates.get(member.id);
-                statsDb.voice.time += time / 1000; // add time in seconds
-                await statsDb.save();
+                time = now - voiceStates.get(member.id);
                 voiceStates.delete(member.id);
+                
+            }else{
+                time = now - oldState.client.readyTimestamp;
             };
+
+            statsDb.voice.time += time / 1000; // add time in seconds
+            await statsDb.save();
         };
     }
 };
