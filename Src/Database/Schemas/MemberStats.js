@@ -1,19 +1,87 @@
+const { Guild, VoiceChannel } = require('discord.js');
 const DB = require('../index.js');
 //const cache = new Map();
+
+/**
+ * @typedef {Object} channelStats
+ * @property {VoiceChannel.id} channel_id ID of the VoiceChannel the user was in.
+ * @property {Date} joined Date in miliseconds when the user joined this Voice Channel.
+ * @property {Date} left Date in miliseconds when the user left this Voice Channel.
+ * @property {Number} time Duration the user was in the VoiceChannel in seconds to the thousandth.
+ */
+class ChannelStats {
+    channel_id = undefined;
+    joined = undefined;
+    left = undefined;
+    time = undefined;
+
+    /**
+     * @param {channelStats} data
+     */
+    constructor(data) {
+        if (typeof data !== "object") throw new Error(`channelData param 'data' must be an object! got ${typeof data}`);
+        if (!data.channel_id) throw new Error(`channelData must include a channel_id:string!`);
+
+        if (data.channel_id) this.channel_id = data.channel_id;
+        if (data?.joined) this.joined = data.joined;
+        if (data?.left) this.left = data.left;
+        if (data?.time) this.time = data.time;
+
+        if (!this.channel_id) throw new Error(`channelData must include a channel id!`);
+    };
+};
+
+/**
+ * @typedef {Object} channelData
+ * @property {Guild.id} guild_id
+ * @property {VoiceChannel.id} channel_id
+ * @property {VoiceChannel.name} name
+ * @property {Array<channelStats>} stats
+ */
+class ChannelData {
+    // channel structure
+    guild_id = undefined;
+    channel_id = undefined;
+    name = undefined;
+
+    // channel metrics
+    stats = [];
+
+    /**
+     *
+     * @param {channelData} data
+     */
+    constructor(data) {
+        if (typeof data !== "object") throw new Error(`channelData param 'data' must be an object! got ${typeof data}`);
+        if (!data.guild_id) throw new Error(`channelData must include a guild_id:string!`);
+        if (!data.channel_id) throw new Error(`channelData must include a channel_id:string!`);
+        if (!data.name) throw new Error(`channelData must include a name:string!`);
+
+        this.guild_id = data.guild_id;
+        this.channel_id = data.channel_id;
+        this.name = data.name;
+
+    };
+};
 
 class DiscordMemberStats {
 
     guild_id = undefined;
     user_id = undefined;
     messages = 0;
+    /**
+     * @property {Object} voice
+     * @property {Number} voice.time
+     * @property {Number} voice.lastChannel
+     * @property {channelData} voice.channels
+     */
     voice = {
-        connections: 0,
         time: 0,
+        lastChannel: undefined,
+        channels: {}, // [{ channel_id: INT, joined:INT, left: INT, time: INT }]
     };
     command_uses = 0;
     code_displays = 0;
-    xp = 0;
-    level = 0;
 
     constructor() {
         this.initializing = true;
@@ -57,8 +125,10 @@ class DiscordMemberStats {
     };
 };
 
-
 module.exports = {
+    ChannelData,
+    ChannelStats,
+    
     getMemberStats: async (guildId, memberId) => {
         //const key = `${guildId}|${memberId}`;
         //if (cache.has(key)) return cache.get(key);

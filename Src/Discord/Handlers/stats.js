@@ -1,8 +1,8 @@
 const { getMemberStats } = require('../../Database/Schemas/MemberStats');
-const { getRandomInt } = require('../Helpers/Utils');
+//const { getRandomInt } = require('../Helpers/Utils');
+const { ChannelData, ChannelStats } = require('../../Database/Schemas/MemberStats');
 
 //const cooldownCache = new Map();
-const voiceStates = new Map();
 
 /**
  * @param {string} content
@@ -20,6 +20,7 @@ const parse = (content, member, level) => {
         .replaceAll(/{member:tag}/g, member.user.tag)
         .replaceAll(/{level}/g, level);
 };
+
 
 module.exports = {
     /**
@@ -41,24 +42,43 @@ module.exports = {
         // Member joined a voice channel
         if (!oldChannel && newChannel) {
             const statsDb = await getMemberStats(member.guild.id, member.id);
+            if(!statsDb.voice.channels[newChannel.id]) statsDb.voice.channels[newChannel.id] = new ChannelData({guild_id:newChannel.guild.id, channel_id: newChannel.id, name: newChannel.name});
 
-            statsDb.voice.connections += 1;
+            statsDb.voice.lastChannel = newChannel.id;
+            statsDb.voice.channels[newChannel.id].stats.unshift(new ChannelStats({ channel_id: newChannel.id, joined: now}));
             await statsDb.save();
-            voiceStates.set(member.id, now);
         };
 
         // Member left a voice channel
         if (oldChannel && !newChannel) {
             const statsDb = await getMemberStats(member.guild.id, member.id);
+            if (!statsDb.voice.channels[oldChannel.id]) statsDb.voice.channels[oldChannel.id] = new ChannelData({ guild_id: oldChannel.guild.id, channel_id: oldChannel.id, name: oldChannel.name });
+            let lastCh = statsDb.voice.channels[statsDb.voice.lastChannel]?.stats[0] || undefined;
 
-            let time;
-            if (voiceStates.has(member.id)) {
-                time = now - voiceStates.get(member.id);
-                voiceStates.delete(member.id);
-                
-            }else{
-                time = now - oldState.client.readyTimestamp;
+            if(lastCh && (lastCh?.channel_id !== oldChannel.id)){ // The channel they just left was not their last known VC... Can't track these stats...
+                statsDb.voice.channels[statsDb.voice.lastChannel].stats.splice(0,1);
             };
+
+            let time = now - oldState.client.readyTimestamp;  // add time in seconds
+
+            if(!lastCh || lastCh.left){ // the user joined a channel while the bot was offline... Give them what time we can.
+                lastCh = new ChannelStats({
+                    channel_id: oldChannel.id,
+                    joined: oldState.client.readyTimestamp,
+                    left: now,
+                    time: time /1000,
+                });
+                statsDb.voice.channels[oldChannel.id].stats.unshift(lastCh);
+            }else{ //This was their last known VC.
+
+                lastCh.left = now;
+                lastCh.time = (now - lastCh.joined) /1000;
+
+
+                time = now - lastCh.joined;
+            };
+
+            statsDb.voice.channels[oldChannel.id].stats[0] = lastCh;
 
             statsDb.voice.time += time / 1000; // add time in seconds
             await statsDb.save();
