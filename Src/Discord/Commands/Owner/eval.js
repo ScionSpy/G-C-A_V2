@@ -66,5 +66,7 @@ const buildErrorResponse = (err) => {
         .setTimestamp(Date.now());
 
     return embed;*/
-    return err.stack;
+    if(!err.stack && typeof err !== "string") return JSON.stringify(err, null, 4);
+    else if (!err.stack) return err;
+    else return err.stack;
 };
