@@ -29,6 +29,9 @@ module.exports = class BotClient extends Client {
 
         // Database
         this.DB = require('../../Database/index.js');
+        this.API = {
+            WoWs: require('../../WebAPI/Wargaming/index.js')
+        };
     };
 
     /**
