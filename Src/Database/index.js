@@ -1,4 +1,3 @@
-const Web = require('../WebAPI/Requests.js');
 const Database = require('./core.js');
 const DB = new Database();
 module.exports = db = {};
