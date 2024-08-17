@@ -79,6 +79,9 @@ module.exports = class Database {
                     if (err == 'MongoServerSelectionError: connect ECONNREFUSED 127.0.0.1:27017') {
                         m = 'Check the service: Control Pannel, System+Security/AdminTools/Services/MongoDB Server = "Start"';
                         ConnectionFailed = true;
+                    } else if (err.startsWith('MongoServerSelectionError: 84610000:error:0A000438:SSL') && err.endsWith('SSL alert number 80')) {
+                        m = 'Atlas Cluster: IP Not whitelisted.';
+                        ConnectionFailed = true;
                     };
                     rej(`Error Opening Database instance!\n${err}`);
                 };
