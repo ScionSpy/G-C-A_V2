@@ -45,7 +45,7 @@ module.exports = {
             if(!statsDb.voice.channels[newChannel.id]) statsDb.voice.channels[newChannel.id] = new ChannelData({guild_id:newChannel.guild.id, channel_id: newChannel.id, name: newChannel.name});
 
             statsDb.voice.lastChannel = newChannel.id;
-            statsDb.voice.channels[newChannel.id].stats.unshift(new ChannelStats({ channel_id: newChannel.id, joined: now}));
+            statsDb.voice.channels[newChannel.id].stats.unshift(new ChannelStats({joined: now}));
             await statsDb.save();
         };
 
@@ -63,7 +63,6 @@ module.exports = {
 
             if(!lastCh || lastCh.left){ // the user joined a channel while the bot was offline... Give them what time we can.
                 lastCh = new ChannelStats({
-                    channel_id: oldChannel.id,
                     joined: oldState.client.readyTimestamp,
                     left: now,
                     time: time /1000,

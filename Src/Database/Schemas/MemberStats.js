@@ -4,13 +4,11 @@ const DB = require('../index.js');
 
 /**
  * @typedef {Object} channelStats
- * @property {VoiceChannel.id} channel_id ID of the VoiceChannel the user was in.
  * @property {Date} joined Date in miliseconds when the user joined this Voice Channel.
  * @property {Date} left Date in miliseconds when the user left this Voice Channel.
  * @property {Number} time Duration the user was in the VoiceChannel in seconds to the thousandth.
  */
 class ChannelStats {
-    channel_id = undefined;
     joined = undefined;
     left = undefined;
     time = undefined;
@@ -20,14 +18,11 @@ class ChannelStats {
      */
     constructor(data) {
         if (typeof data !== "object") throw new Error(`channelData param 'data' must be an object! got ${typeof data}`);
-        if (!data.channel_id) throw new Error(`channelData must include a channel_id:string!`);
 
-        if (data.channel_id) this.channel_id = data.channel_id;
         if (data?.joined) this.joined = data.joined;
         if (data?.left) this.left = data.left;
         if (data?.time) this.time = data.time;
 
-        if (!this.channel_id) throw new Error(`channelData must include a channel id!`);
     };
 };
 
@@ -128,7 +123,7 @@ class DiscordMemberStats {
 module.exports = {
     ChannelData,
     ChannelStats,
-    
+
     getMemberStats: async (guildId, memberId) => {
         //const key = `${guildId}|${memberId}`;
         //if (cache.has(key)) return cache.get(key);
