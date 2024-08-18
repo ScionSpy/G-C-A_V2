@@ -9,7 +9,8 @@ require("./Discord/Helpers/Extenders/Guild");
 // initialize client
 const client = new BotClient();
 client.loadCommands("./src/Discord/Commands");
-client.loadEvents("./src/Discord/Events");
+client.loadEvents("./src/Discord/Events/Discord");
+client.loadGCAEvents("./src/Discord/Events/GCA");
 
 
 

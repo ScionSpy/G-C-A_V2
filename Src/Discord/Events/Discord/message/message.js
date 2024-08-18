@@ -1,10 +1,10 @@
 //const { automodHandler, statsHandler } = require("@src/handlers");
-const { commandHandler } = require('../../Handlers');
-const config = require("../../../config");
-const { getSettings } = require("../../../Database/Schemas/Guild");
+const { commandHandler } = require('../../../Handlers');
+const config = require("../../../../config");
+const { getSettings } = require("../../../../Database/Schemas/Guild");
 
 /**
- * @param {import('../../Structures').BotClient} client
+ * @param {import('../../../Structures').BotClient} client
  * @param {import('discord.js').Message} message
  */
 module.exports = async (client, message) => {

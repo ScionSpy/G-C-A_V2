@@ -69,6 +69,40 @@ module.exports = class BotClient extends Client {
     };
 
     /**
+     * Load all events from the specified directory
+     * @param {string} directory directory containing the event files
+     */
+    loadGCAEvents(directory) {
+        console.log(`> Loading GCA events...`);
+        let success = 0;
+        let failed = 0;
+        const clientEvents = [];
+
+        recursiveReadDirSync(directory).forEach((filePath) => {
+            const file = path.basename(filePath);
+            try {
+                const eventName = path.basename(file, ".js");
+                const event = require(filePath);
+
+                this.on(eventName, event.bind(null, this));
+                //clientEvents.push(`✓ ${file}`);
+                clientEvents.push(["✓", file]);
+
+                delete require.cache[require.resolve(filePath)];
+                success += 1;
+            } catch (ex) {
+                failed += 1;
+                console.error(`loadEvent - ${file}`, ex);
+            };
+        });
+
+        let events = prettyArrays(clientEvents, 2);
+        console.log(events);
+
+        console.log(`>> Loaded ${success + failed} GCA events. Success (${success}) Failed (${failed})\n`);
+    };
+
+    /**
      * Find command matching the invoke
      * @param {string} invoke
      * @returns {import('@structures/Command')|undefined}
