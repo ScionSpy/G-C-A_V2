@@ -51,7 +51,8 @@ class Presence {
 const presences = [];
 
 //presneces.push(new Presence("xxx", "xxx"));
-presences.push(new Presence("ONLINE", "PLAYING", "Battleship."));
+presences.push(new Presence("DND", "PLAYING", "Battleship."));
+presences.push(new Presence("DND", "PLAYING", "with Nukes."));
 presences.push(new Presence("DND", "PLAYING", "with the Wargaming API."));
 presences.push(new Presence("IDLE", "WATCHING", "over {players}"));
 presences.push(new Presence("IDLE", "WATCHING", "over {clans}"));
@@ -80,12 +81,12 @@ async function updatePresence(client) {
     };
 
     if(activity.message.includes("{players}")){
-        let players = client.DB._Get("Verified");
+        let players = await client.DB._Get("Verified");
         activity.message = activity.message.replaceAll("{players}", players.length);
     };
 
     if (activity.message.includes("{clans}")) {
-        let clans = client.DB._Get("Clans");
+        let clans = await client.DB._Get("Clans");
         activity.message = activity.message.replaceAll("{clans}", clans.length);
     };
 
