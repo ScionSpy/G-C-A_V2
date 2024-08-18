@@ -28,7 +28,7 @@ module.exports = {
                 if (!exact && q.includes(',')) throw new Error(`WargamingAPI.playerLookup(query = '${q}', exact = ${exact})\n  Non-Exact Queries must NOT have commas.\n`);
             };
 
-            let results = await API.makeAPICall('account/list/', `type=${exact ? 'exact' : 'startswith'}&search=${queryData[x].join(',')}`);
+            let results = await API.makeAPICall('wows/account/list/', `type=${exact ? 'exact' : 'startswith'}&search=${queryData[x].join(',')}`);
 
             if (results.status === "error") throw new Error(`WargamingAPI.playerLookup(query='${results.error.value}', exact=${exact}) -> ` + await API.handelApiError(results.error, 'account/list'));
             else players = players.concat(results.data);
@@ -52,7 +52,7 @@ module.exports = {
             };
 
 
-            let results = await API.makeAPICall('account/info', `account_id=${queryData[x].join(',')}`);
+            let results = await API.makeAPICall('wows/account/info', `account_id=${queryData[x].join(',')}`);
 
             if (results.status === "error") throw new Error(`WargamingAPI.getPlayerDetails(query='${results.error.value}') -> ` + await API.handelApiError(results.error, 'account/info'));
             else players = players.concat(results.data);

@@ -45,17 +45,21 @@ const API_Errors = {
 
 module.exports = class Wargaming_API extends WebAPI {
     constructor(){
-        super(config.URL);
+        super();
     };
 
-    async makeAPICall(path, query){
-        if(query.startsWith('&')) query = query.splice(0,1);
+    async makeAPICall(path, query = "", auth = ""){
+        if(query.startsWith('&')) query = query.slice(0,1);
         if(!path.endsWith('/')) path = path + '/';
-        let request = `${path}?${config.app_id}&${query}`;
+        let app_id = config.app_id;
+        if(path.startsWith('wows')) path = config.URL.wows+path;
+        else if (path.startsWith('api')){ path = config.URL.api + path; app_id=""};
+
+        let request = app_id ? `${path}?${config.app_id}&${query}` : `${path}?${query}`;
         let results;
 
         try{
-            results = await this.__makeRequest(request);
+            results = await this.__makeRequest(request, auth);
         }catch(err){
             results = err;
         };

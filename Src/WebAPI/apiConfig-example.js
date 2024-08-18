@@ -7,8 +7,8 @@ module.exports = {
 
     Wargaming: {
         Debug: false, // Debugs Wargaming API packets.
-        URL: 'https://api.worldofwarships.com/wows/',
-        app_id: 'application_id=eec4c249227db89c659d027b9b7b4d36',
-        clan_id: '1000101905'
+        URL: 'https://api.worldofwarships.com/',
+        app_id: 'application_id=',
+        clan_id: ''
     },
 }
