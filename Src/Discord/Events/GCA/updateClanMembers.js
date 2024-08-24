@@ -1,5 +1,5 @@
 const { Clans } = require('../../../WebAPI/Wargaming/index');
-const { clan_id } = require('../../../WebAPI/apiConfig').Wargaming;
+const { clan_id } = require('../../../WebAPI/apiConfig.js').Wargaming;
 const Player = require('../../../Database/Player.js');
 
 let results = {
@@ -47,7 +47,7 @@ async function updatePlayer(mem, member) {
 
 /**
  *
- * @param {import('../../Structures/BotClient')} bot
+ * @param {import('../../Structures/BotClient.js')} bot
  */
 module.exports = async (bot) => {
     let clans = await Clans.getDetails(clan_id);
