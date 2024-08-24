@@ -54,8 +54,10 @@ const presences = [];
 presences.push(new Presence("DND", "PLAYING", "Battleship."));
 presences.push(new Presence("DND", "PLAYING", "with Nukes."));
 presences.push(new Presence("DND", "PLAYING", "with the Wargaming API."));
-presences.push(new Presence("IDLE", "WATCHING", "over {players}"));
-presences.push(new Presence("IDLE", "WATCHING", "over {clans}"));
+presences.push(new Presence("IDLE", "WATCHING", "over {players} players."));
+presences.push(new Presence("IDLE", "WATCHING", "over {clans} clans."));
+presences.push(new Presence("DND", "WATCHING", "the network hack Gemini's computer."));
+presences.push(new Presence("DND", "PLAYING", "with Gemini's computer."));
 
 
 
