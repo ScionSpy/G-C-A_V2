@@ -54,23 +54,51 @@ module.exports = {
      * @param {Number} pageCount entires per page.; Default: 30, Max: 100
      * @returns Array
      */
-    getInvites: async function getInvite(page = 1, pageCount = 30) {
-        if (typeof page !== "number") throw new Error(`WargamingAPI.Clans.getInvites(page, pageCount); {page} must be number! got ${typeof page}`);
-        if (typeof pageCount !== "number") throw new Error(`WargamingAPI.Clans.getInvites(page, pageCount); {page} must be number! got ${typeof pageCount}`);
+    getInvites: async function getInvite(data = {page: 1, pageCount: 30, getAll: false}) {
+        if (data.getAll === undefined && data.page === undefined && data.pageCount === undefined) throw new Error(`WargamingAPI.Clans.getInvites({page, pageCount, getAll}); either both of {page} and {pageCount} need be defined as numbers or {getAll} as a boolean. got undefined on all.`);
+        if (typeof data.getAll !== "undefined" && typeof data.getAll !== "boolean") throw new Error(`WargamingAPI.Clans.getInvites({page, pageCount, getAll}); {getAll} must be undefined or a Boolean. got ${typeof data.getAll}`);
+        if (data.getAll === undefined && typeof data.page !== "number") throw new Error(`WargamingAPI.Clans.getInvites({page, pageCount, getAll}); {page} must be number! got ${typeof data.page}`);
+        if (data.getAll === undefined && typeof data.pageCount !== "number") throw new Error(`WargamingAPI.Clans.getInvites({page, pageCount, getAll}); {page} must be number! got ${typeof data.pageCount}`);
 
-        if(page === 0) page = 1;
-        if(pageCount > 100) pageCount = 100;
+        if (data.page === 0) data.page = 1;
+        if (data.pageCount > 100) data.pageCount = 100;
 
-        let query = `battle_type=pvp&order=-updated_at&offset=${(page*pageCount)-pageCount}&limit=${pageCount}`;
-        let auth = "hP9sI4SqE7SZR_6PFNrkegcmpaTMFbTYkMXQ6HGZhcjJxXDuvR8cw4MZyPBA5Zp6"; //DB.getAuthToken({name:"ShadowSpyy"});
+        callAPI = async function(query){
 
-        let Cookies = `wsauth_token=${auth}`;
+            let auth = "hP9sI4SqE7SZR_6PFNrkegcmpaTMFbTYkMXQ6HGZhcjJxXDuvR8cw4MZyPBA5Zp6"; //await DB.getAuthToken({name:"ShadowSpyy"});
+            let Cookies = `wsauth_token=${auth}`;
 
-        let results = await API.makeAPICall('api/recruitment/clan_invites/', query, Cookies);
+            let results = await API.makeAPICall('api/recruitment/clan_invites/', query, Cookies);
+            return results;
+        };
 
-        if (results.applications) return results.applications;
+        let results;
+        if(data.getAll){
+
+            let baseQuery = `battle_type=pvp&order=-updated_at&offset={OFFSET}&limit={LIMIT}`;
+
+            invites = [];
+            let metaLength = 99;
+            for(let page = 0; page*100 < metaLength; page++){
+                let query = new String(baseQuery.replace('{OFFSET}', page * 100).replace('{LIMIT}', 100));
+
+                let dataPack = await callAPI(query);
+                if(dataPack._meta_.total > metaLength) metaLength = dataPack._meta_.total;
+                invites = invites.concat(dataPack.invites);
+            };
+
+            return invites;
+        } else {
+            let query = `battle_type=pvp&order=-updated_at&offset=${(data.page * data.pageCount) - data.pageCount}&limit=${data.pageCount}`;
+
+            results = await callAPI(query);
+        };
+
+        if (results.invites) return results.invites;
         else return results;
     },
+
+
 
     lookup: async function clanLookup(query) {
         if (typeof query !== "string") throw new Error(`WargamingAPI.clanLookup(query)\n  'query' must be a string! got ${typeof query}\n`);
