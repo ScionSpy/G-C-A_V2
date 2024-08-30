@@ -44,7 +44,7 @@ const buildSuccessResponse = async (output, client) => {
 
 
     // Token protection
-    output = require("util").inspect(output, { depth: 1 }).replaceAll(client.token, DUMMY_TOKEN);
+    output = require("util").inspect(output, { depth: 3 }).replaceAll(client.token, DUMMY_TOKEN);
 
     /*const embed = new MessageEmbed()
         .setAuthor({ name: "📤 Output" })
