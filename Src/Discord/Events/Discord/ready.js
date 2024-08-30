@@ -14,5 +14,10 @@ module.exports = async (client) => {
     // Load reaction roles to cache
     //await cacheReactionRoles(client);
 
-
+    // startTimer clan members
+    // let data = await client.emit('updateClanMembers', client);
+    client.emit('updateClanMembers', client);
+    setTimeout(function(){
+        client.emit('updateClanMembers', client);
+    },1000*60*15);
 };
