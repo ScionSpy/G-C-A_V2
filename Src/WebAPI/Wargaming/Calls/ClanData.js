@@ -31,6 +31,47 @@ const API = new WargamingAPI();
  * @property {String} description
 */
 
+/**
+ * @typedef {Object} InviteData
+ * @property {String} game 'wows' for world of warships
+ * @property {String} status active | expired | accepted | declined
+ * @property {Date} expires_at Time at which the invite expires.
+ * @property {Number} id WoWs Account ID
+ *
+ * @property {Object} sender User who sent the invite.
+ * @property {Number} sender.clan_id ID of the Sender's clan.
+ * @property {Number} sender.id Account ID for the Sender.
+ * @property {Boolean} sender.is_banned Is the sender currently banned from WoWs?
+ * @property {String} sender.role The Sender's role in the clan.
+ * @property {String} sender.name The Sender's name.
+ *
+ *
+ * @property {Object} account Information regarding the invitee.
+ * @property {Number|Null} account.clan_id Invitee's current clan ID.
+ * @property {Array<>} account.bans Invitees previous bans.
+ * @property {Number} account.id Invitee's Account ID.
+ * @property {Date} account.in_clan_cooldown_till Is the Invitee currently in clan cooldown?
+ * @property {Boolean} account.is_banned Is the Invitee Banned?
+ * @property {String} account.name Invitee's name.
+ *
+ * @property {Object} statistics Stats of the player being invited
+ * @property {Number} statistics.btl Number of account battles.
+ * @property {Number} statistics.afb Average Frags per Battle.
+ * @property {Number} statistics.aeb Average EXP per Battle.
+ * @property {Number} statistics.rank 0-17, 17 = Clan Battle Access.
+ * @property {Number|Null} statistics.season_rank
+ * @property {Number} statistics.season_id
+ * @property {Number} statistics.wb Win Rate
+ * @property {Number} statistics.admg Average Damage per Battle.
+ * @property {Number} statistics.abd
+ *
+ * @property {String|Null} comment
+ * @property {Boolean} is_hidden_statistics
+ * @property {Date} updated_at Time at which the invite was last updated.
+ * @property {Boolean} is_banned
+ * @property {Date} created_at Time at which the invite was created.
+ */
+
 
 
 
@@ -52,7 +93,7 @@ module.exports = {
      *
      * @param {Number} page Page to display; Default: 1
      * @param {Number} pageCount entires per page.; Default: 30, Max: 100
-     * @returns Array
+     * @returns {Array<InviteData>}
      */
     getInvites: async function getInvite(data = {page: 1, pageCount: 30, getAll: false}) {
         if (data.getAll === undefined && data.page === undefined && data.pageCount === undefined) throw new Error(`WargamingAPI.Clans.getInvites({page, pageCount, getAll}); either both of {page} and {pageCount} need be defined as numbers or {getAll} as a boolean. got undefined on all.`);
@@ -72,6 +113,7 @@ module.exports = {
             return results;
         };
 
+        /** @type {InviteData} */
         let results;
         if(data.getAll){
 
@@ -113,7 +155,7 @@ module.exports = {
 
     /**
      *
-     * @param {*} query
+     * @param {String} query
      * @returns {Array<Array<Clan_Info>>}
      */
     getDetails: async function getClanDetails(query) {
