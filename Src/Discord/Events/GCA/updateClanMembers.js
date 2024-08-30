@@ -228,6 +228,6 @@ module.exports = async (bot) => {
     });
 
     //ToDO: "Get Channel Function" in Helpers.
-    bot.channels.cache.get('1137246476188274750').send(msg);
+    bot.channels.cache.get('1136014419567067166').send(msg);
     if (adminMsg !== '__**Member Changes**__') bot.channels.cache.get('1222751535159578717').send(adminMsg);
 };
