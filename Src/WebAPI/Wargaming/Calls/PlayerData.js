@@ -60,4 +60,29 @@ module.exports = {
 
         return players;
     },
+
+    getClanInfo: async function (query, clanExtra = '') {
+        if (typeof query !== "string" || query.length < 10) throw new Error(`WargamingAPI.getPlayerClanInfo(query)\n  'query' must be a string of clan ID's! got ${typeof query} : length(${query.length}) !== 10\n`);
+
+        let queryData = [[]]
+        if (query.includes(',')) queryData = defineQuery(query, 100);
+        else queryData[0][0] = query; // "startswith"
+        let players = [];
+
+        for (let x = 0; x < queryData.length; x++) {
+            for (let y = 0; y < queryData[x].length; y++) {
+                let q = queryData[x][y];
+                if (isNaN(q)) throw new Error(`WargamingAPI.getPlayerClanInfo(query = '${q}')\n  queries must be a string of Numbers! got ${typeof q} : ${q}\n`);
+            };
+
+            if (clanExtra) clanExtra = `&extra=clan`;
+            let results = await API.makeAPICall('wows/clans/accountinfo', `account_id=${queryData[x].join(',')}${clanExtra}`);
+
+            if (results.status === "error") throw new Error(`WargamingAPI.getPlayerClanInfo(query='${results.error.value}') -> ` + await API.handelApiError(results.error, 'clans/accountinfo'));
+            else players = players.concat(results.data);
+        };
+
+        return players;
+
+    },
 };

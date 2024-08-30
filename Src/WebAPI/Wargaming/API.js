@@ -36,6 +36,12 @@ const API_Errors = {
         'account/list': { description: "{Search} exceeded the allowed 24 characters, or included invalid special characters!" }
     },
 
+    'INVALID_ACCOUNT_ID': {
+        code: 407,
+        message: 'INVALID_ACCOUNT_ID',
+        'clans/accountinfo': {description: "{Search} paramater was not a valid single or list of player ID's."}
+    },
+
     'CLAN_ID_NOT_SPECIFIED': {
         code: 402,
         message: 'CLAN_ID_NOT_SPECIFIED',
