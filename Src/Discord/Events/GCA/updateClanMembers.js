@@ -11,7 +11,15 @@ const { Ranks } = require('../../../Constants.js');
  * @property {String} rank Player Clan Rank
  * @property {Number} joined Time Player joined the Clan in ms.
  * @property {String} inviter Method the player took to join the Clan.
- */
+ *
+ * @property {results.added.oldMember|undefined} oldMember Member stats before leaving the clan.
+*/
+/**
+ * @typedef {Object} results.added.oldMember
+ * @property {Number} left_at Date in ms when the player left the clan.
+ * @property {Number} duration Duration in ms, how long they were with the clan.
+ * @property {String} last_rank Last rank member held in the clan.
+*/
 
 /**
  * @typedef {Object} results.removed
@@ -61,15 +69,22 @@ let results = {};
 async function addPlayer(member, inviteData){
     let player = new Player({ id: member.account_id });
     player = await player.load();
-    console.log(player)
     player.toggleClanMember(true, member.role);
+
+    let oldMember = "";
+    if(player.stats.left) oldMember = {
+        left_at: player.stats.left,
+        duration: player.stats.duration,
+        last_rank: player.stats.rank
+    };
 
     let data = {
         id: member.account_id,
         name: member.account_name,
         rank: member.role,
         joined: member.joined_at * 1000,
-        inviter: inviteData ? `${inviteData.sender.id} / ${inviteData.sender.name}` : 'Application'
+        inviter: inviteData ? `${inviteData.sender.id} / ${inviteData.sender.name}` : 'Application',
+        oldMember
     };
 
     results.added.push(data);
@@ -199,12 +214,17 @@ module.exports = async (bot) => {
     let adminMsg = `__**Member Changes**__`;
 
     if(results.added.length > 0) results.added.forEach(result => {
-        msg = `${msg}\n> :new: ${result.name} has joined the clan!`
-        adminMsg = `${adminMsg}\n> :new: ${result.name} has joined the clan! [  Invite Method: ${result.inviter}  ]`
+        if(!result.oldMember){
+            msg = `${msg}\n> :new: ${result.name} has joined the clan!`
+            adminMsg = `${adminMsg}\n> :new: ${result.name} has joined the clan! [  Invite Method: ${result.inviter}  ]`;
+        }else{
+            msg = `${msg}\n> :new: ${result.name} has rejoined the clan after ${Math.floor(result.oldMember.left_at /1000/60/60/24)} days.`
+            adminMsg = `${adminMsg}\n> :new: ${result.name} has rejoined the clan after ${Math.floor(result.oldMember.left_at / 1000 / 60 / 60 / 24)} days.\n> [  Invite Method: ${result.inviter}  ]\n> Last Rank Held : ${Ranks[result.oldMember.last_rank]}\n> Left ${Math.round(result.oldMember.left_at / 1000 / 60 / 60 / 24)} days ago. | With G-C-A for a total of ${Math.round(result.oldMember.duration / 1000 / 60 / 60 / 24)} days.`;
+        };
     });
 
     if (results.removed.length > 0) results.removed.forEach(result => {
-        msg = `${msg}\n> :warning: ${Ranks.Shorts[result.rank]} ${result.name} has left the clan!`
+        msg = `${msg}\n> :warning: ${Ranks.Shorts[result.rank]} ${result.name} has left the clan after ${Math.floor(result.total /1000/60/60/24)} days!!`
         //ToDo: Admin once dashboard is set up.
         //adminMsg = `${adminMsg}\n> :warning: ${Ranks.Shorts[result.rank]} ${result.name} has left the clan!`
     });
@@ -229,5 +249,5 @@ module.exports = async (bot) => {
     //ToDO: "Get Channel Function" in Helpers.
     bot.channels.cache.get('1136014419567067166').send(msg);
     if (adminMsg !== '__**Member Changes**__') bot.channels.cache.get('1222751535159578717').send(adminMsg);
-    bot.channels.cache.get('1168784020109266954').send(JSON.stringify(results, null, 4));
+    bot.channels.cache.get('1168784020109266954').send(JSON.stringify(results, null, 4), {code:'js', split:1});
 };

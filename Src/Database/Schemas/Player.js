@@ -35,7 +35,7 @@ module.exports = class Player extends Database {
                 this.stats = {
                     joined: clanMember[0].clan_joined *1000,
                     left: clanMember[0].clan_left,
-                    duration: (clanMember[0].clan_left - (clanMember[0].clan_joined *1000)) /60/60/24,
+                    duration: clanMember[0].clan_left - (clanMember[0].clan_joined *1000),
                     rank: clanMember[0].clan_role,
                 };
             }else{
@@ -55,6 +55,7 @@ module.exports = class Player extends Database {
                     joined: clanMember[0].clan_joined,
                     lastBattle: clanMember[0].last_battle,
                     lastLogOut: clanMember[0].last_logOut,
+                    duration: clanMember[0].duration ? clanMember[0].duration : 0,
                     battles: clanMember[0].battles
                 };
             };
@@ -145,12 +146,12 @@ module.exports = class Player extends Database {
         this.name = name;
         res.members = await this._Edit("Members", { id: this.id }, { name });
         res.verified = await this._Edit("Verified", { id: this.id }, { name });
-        res.admin = await this._Edit("Admin", { id: this.id }, { name });
+        res.verified = await this._Edit("Admin", { id: this.id }, { name });
 
         return res;
     };
 
-    async deactivateMember(role) {
+    async deactivateMember() {
         let res = {
             member: null,
             admin: null
@@ -163,19 +164,22 @@ module.exports = class Player extends Database {
         if(this.stats.inactive) remove.inactive = true;
         if(this.stats.loa && !this.admin.loa.exempt) remove.loa = true;
 
+        let clan_left = Date.now();
+        let duration = this.stats.duration + (clan_left - this.stats.joined *1000);
+
         if(remove.loa && remove.inactive){
-            res.member = await this._Edit("Members", { id: this.id }, { isLoA: false, isInactive: false, clan_role: role, active: false });
+            res.member = await this._Edit("Members", { id: this.id }, { isLoA: false, isInactive: false, active: false, clan_left, duration });
             res.admin = await this._Edit("Admin", { id: this.id }, { LoA: null, inactive: null });
 
         } else if (remove.loa && !remove.inactive) {
-            res.member = await this._Edit("Members", { id: this.id }, { isLoA: false, clan_role: role, active: false });
+            res.member = await this._Edit("Members", { id: this.id }, { isLoA: false, active: false, clan_left, duration });
             res.admin = await this._Edit("Admin", { id: this.id }, { LoA: null });
 
         } else if (!remove.loa && remove.inactive) {
-            res.member = await this._Edit("Members", { id: this.id }, { isInactive: false, clan_role: role, active: false });
+            res.member = await this._Edit("Members", { id: this.id }, { isInactive: false, active: false, clan_left, duration });
             res.admin = await this._Edit("Admin", { id: this.id }, { inactive: null });
         }else{
-            res.member = await this._Edit("Members", { id: this.id }, { clan_role: role, active: false });
+            res.member = await this._Edit("Members", { id: this.id }, { active: false, clan_left, duration });
         };
 
         return res;
@@ -194,7 +198,7 @@ module.exports = class Player extends Database {
         let results;
         if (status == false){
             role = null;
-            results = await this.deactivateMember(role);
+            results = await this.deactivateMember();
         } else {
             results = await this._Edit("Members", { id: this.id }, { active: status, clan_role: role });
             await this.load();
