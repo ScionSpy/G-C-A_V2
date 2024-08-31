@@ -32,6 +32,39 @@ const API = new WargamingAPI();
 */
 
 /**
+ * @typedef {Object} ApplicationData
+ * @property {String} game 'wows' for world of warships
+ * @property {String} status active | expired | accepted | declined
+ * @property {Date} expires_at Time at which the invite expires.
+ * @property {Number} id WoWs Account ID *
+ *
+ * @property {Object} account Information regarding the invitee.
+ * @property {Number|Null} account.clan_id Invitee's current clan ID.
+ * @property {Array<>} account.bans Invitees previous bans.
+ * @property {Number} account.id Invitee's Account ID.
+ * @property {Date} account.in_clan_cooldown_till Is the Invitee currently in clan cooldown?
+ * @property {Boolean} account.is_banned Is the Invitee Banned?
+ * @property {String} account.name Invitee's name.
+ *
+ * @property {Object} statistics Stats of the player being invited
+ * @property {Number} statistics.btl Number of account battles.
+ * @property {Number} statistics.afb Average Frags per Battle.
+ * @property {Number} statistics.aeb Average EXP per Battle.
+ * @property {Number} statistics.rank 0-17, 17 = Clan Battle Access.
+ * @property {Number|Null} statistics.season_rank
+ * @property {Number} statistics.season_id
+ * @property {Number} statistics.wb Win Rate
+ * @property {Number} statistics.admg Average Damage per Battle.
+ * @property {Number} statistics.abd
+ *
+ * @property {String|Null} comment
+ * @property {Boolean} is_hidden_statistics
+ * @property {Date} updated_at Time at which the invite was last updated.
+ * @property {Boolean} is_banned
+ * @property {Date} created_at Time at which the invite was created.
+ */
+
+/**
  * @typedef {Object} InviteData
  * @property {String} game 'wows' for world of warships
  * @property {String} status active | expired | accepted | declined
@@ -77,6 +110,10 @@ const API = new WargamingAPI();
 
 module.exports = {
 
+    /**
+     *
+     * @returns {Array<ApplicationData>}
+     */
     getApplications: async function getInviteApplications(){
         let query = "battle_type=pvp&order=-updated_at&offset=0&limit=100";
         let auth = "hP9sI4SqE7SZR_6PFNrkegcmpaTMFbTYkMXQ6HGZhcjJxXDuvR8cw4MZyPBA5Zp6"; //DB.getAuthToken({name:"ShadowSpyy"});
