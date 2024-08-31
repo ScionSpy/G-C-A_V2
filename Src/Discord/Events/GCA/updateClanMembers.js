@@ -186,7 +186,6 @@ async function updateClanMembers(bot) {
 module.exports = async (bot) => {
 
     let results = await updateClanMembers(bot);
-    console.log(results);
 
     if(
         results.added.length == 0 &&
@@ -230,4 +229,5 @@ module.exports = async (bot) => {
     //ToDO: "Get Channel Function" in Helpers.
     bot.channels.cache.get('1136014419567067166').send(msg);
     if (adminMsg !== '__**Member Changes**__') bot.channels.cache.get('1222751535159578717').send(adminMsg);
+    bot.channels.cache.get('1168784020109266954').send(JSON.stringify(results, null, 4));
 };
