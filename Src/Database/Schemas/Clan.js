@@ -26,6 +26,12 @@ module.exports = class Clan {
     };
 
 
+    async getApplications(){
+        let applications = await Clans.getApplications();
+        return applications;
+    };
+
+
     async getInvites(){
         let clanInvites = await Clans.getInvites({getAll:true});
         return clanInvites;

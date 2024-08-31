@@ -16,8 +16,27 @@ module.exports = async (client) => {
 
     // startTimer clan members
     // let data = await client.emit('updateClanMembers', client);
-    client.emit('updateClanMembers', client);
-    setTimeout(function(){
-        client.emit('updateClanMembers', client);
-    },1000*60*15);
+
+    startTimers(client);
+};
+
+
+const gcaEvents = [
+    { enabled: true, timer: 1000*60*15, name: 'updateClanMembers' },
+    { enabled: true, timer: 1000*60*15, name: 'fetchApplications' },
+];
+
+function startTimers(client){
+
+
+    for(let x = 0; x < gcaEvents.length; x++){
+        let event = gcaEvents[x];
+        if(!event.enabled) return;
+
+        client.emit(event.name, client);
+
+        setInterval(function () {
+            client.emit(event.name, client);
+        }, event.timer);
+    };
 };
