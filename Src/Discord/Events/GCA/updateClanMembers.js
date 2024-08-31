@@ -1,6 +1,6 @@
 const { Clans } = require('../../../WebAPI/Wargaming/index');
 const { clan_id } = require('../../../WebAPI/apiConfig.js').Wargaming;
-const Player = require('../../../Database/Player.js');
+const Player = require('../../../Database/Schemas/Player.js');
 const { Ranks } = require('../../../Constants.js');
 
 
