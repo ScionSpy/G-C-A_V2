@@ -1,16 +1,21 @@
-const Constants = require('../../Constants.js');
-const Database = require('../core.js');
+const Constants = require('../../../Constants.js');
+const Database = require('../../core.js');
+
+
+//ToDo: Create JSDoc
+
 
 module.exports = class Player extends Database {
-    loading = true;
 
     constructor(Data){
         super();
 
-        if (!Data.id && !Data.name) throw new Error(`[Database.Player] Player requires an ID or Name to load!`);
+        if (!Data.id && !Data.name) throw new Error(`Database.Player(Data); 'data' requires data.id or data.name to load!`);
 
         this.id = Data.id || null;
         this.name = Data.name || null;
+
+        this.needsLoading = true;
     };
 
     async load(){
@@ -23,11 +28,14 @@ module.exports = class Player extends Database {
         let admin = await this._Get("Admin", query) || null;
 
         if(verifiedUser){
-            delete this.loading;
-
             this.id = verifiedUser[0].id;
             this.name = verifiedUser[0].name;
             this.discord_id = verifiedUser[0].discord_id;
+
+        }else{
+            this.id = clanMember[0].id;
+            this.name = clanMember[0].name;
+            this.discord_id = clanMember[0].discord_id;
         };
 
         if(clanMember){
@@ -40,7 +48,6 @@ module.exports = class Player extends Database {
                 };
             }else{
 
-                if(this.loading) delete this.loading;
 
                 this.clan = {
                     id: Constants.GCA.id,
@@ -70,6 +77,7 @@ module.exports = class Player extends Database {
             };
         };
 
+        if (this.needsLoading) delete this.needsLoading;
         return this;
     };
 
@@ -86,7 +94,8 @@ module.exports = class Player extends Database {
 
 
     isRecruiter(){
-        if (!this.clan && this.clan.id != Constants.GCA.id && Constants.Ranks.Values[this.clan.rank] > 3) return false;
+        if (this.clan && this.clan.id == Constants.GCA.id && Constants.Ranks.Values[this.clan.rank] > 3) return true;
+        else return false;
     };
 
 
