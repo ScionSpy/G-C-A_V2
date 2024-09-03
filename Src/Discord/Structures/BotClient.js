@@ -4,8 +4,10 @@ const {
 } = require("discord.js");
 const path = require("path");
 const { recursiveReadDirSync } = require("../Helpers/Utils");
-const Clan = require("../../Database/Schemas/Clan.js");
+const Clans = require("../../Database/Schemas/index.js").Clans;
 const { clan_id } = require('../../WebAPI/apiConfig.js').Wargaming;
+
+const { PlayerManager } = require('../Helpers/Managers');
 
 
 module.exports = class BotClient extends Client {
@@ -34,7 +36,10 @@ module.exports = class BotClient extends Client {
         this.API = {
             WoWs: require('../../WebAPI/Wargaming/index.js')
         };
-        this.Clan = new Clan({id:clan_id});
+        let clan = new Clans.Clan({ id: clan_id });
+        this.Clan = clan;//._Load();
+
+        this.Players = new PlayerManager(this);
     };
 
     /**
