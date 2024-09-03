@@ -2,7 +2,8 @@ module.exports = {
     GCA: {
         id: "1000101905",
         tag: "G-C-A",
-        name: "Gemini's Comerades in Arms"
+        name: "Gemini's Comerades in Arms",
+        discord_id: "1126377465741324429",
     },
 
     Ranks: {
@@ -20,7 +21,7 @@ module.exports = {
             "recruitment_officer": "(R)",
             "commissioned_officer": "(C)",
             "officer": "(L)",
-            "private": "(M)"
+            "private": "(M)",
         },
 
         Values: {
@@ -30,7 +31,7 @@ module.exports = {
             "commissioned_officer": 2,
             "officer": 1,
             "private": 0,
-            "null": -1
+            "null": -1,
         },
     },
 };
