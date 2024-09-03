@@ -1,11 +1,42 @@
 const { MessageEmbed } = require('discord.js');
 const { Clans, Players } = require('../../../WebAPI/Wargaming/index');
-const { Utils } = require('../../Helpers');
+const roundTo = require('../../Helpers/Utils').roundToNthNumber;
 const Util = require('../../../WebAPI/Utils');
+
+/**
+ *
+ * @param {Number} value
+ */
+function getLength(value){
+    return value.toString().length;
+};
+
+/**
+ *
+ * @param {Date} Date
+ */
+function getTimeStamp(Date){
+
+    let Year = Date.getFullYear();
+    let Month = Date.getMonth() +1;
+    let Day = Date.getDate();
+    let Hour = Date.getHours();
+    let Minute = Date.getMinutes();
+    let Second = Date.getSeconds();
+
+    if (getLength(Month) == 1) Month = `0${Month}`;
+    if (getLength(Day) == 1) Day = `0${Day}`;
+    if (getLength(Hour) == 1) Hour = `0${Hour}`;
+    if (getLength(Minute) == 1) Minute = `0${Minute}`;
+    if (getLength(Second) == 1) Second = `0${Second}`;
+
+    return `${Year}-${Month}-${Day} ${Hour}:${Minute}:${Second} EST`;
+};
+
 
 /** @param {import('../../Structures/BotClient')} bot */
 module.exports = async function (bot) {
-    let applications = await bot.Clan.getApplications();
+    let applications = await bot.Clan.applications.getApplications();
 
     if(applications.length == 0) return;
     let dbApps = await bot.DB._Get("Applications", {}, {id:1, expires_at:1});
@@ -38,8 +69,8 @@ module.exports = async function (bot) {
     /** @type {Array<playerData>} */
     let playerData = {};
 
-    for(let key in players){
-        let player = players[key];
+    for(let key in players[0]){
+        let player = players[0][key];
         playerData[key] = {
             created_at: player.created_at *1000,
             last_battle: player.last_battle_time *1000
@@ -54,7 +85,7 @@ module.exports = async function (bot) {
 
         let oldMember = await bot.DB._Get("Members", {id:app.account.id});
         if(oldMember[0]) oldMember = true;
-        
+
         let stats;
         app.is_hidden_statistics ?
         stats = "Hidden" :
@@ -64,10 +95,12 @@ module.exports = async function (bot) {
         };
 
         results.push({
+            id: app.id,
             name: app.account.name,
             comment: app.comment,
             inviteExpiresAt: app.expires_at,
             joined_at: playerData[app.account.id].created_at,
+            cooldown_expires: app.account.in_clan_cooldown_till,
             last_battle: playerData[app.account.id].last_battle,
             oldMember,
             stats
@@ -79,15 +112,21 @@ module.exports = async function (bot) {
         let result = results[x];
         console.log(result)
 
+        let joinedAt = getTimeStamp(new Date(result.joined_at));
+        let lastBattle = getTimeStamp(new Date(result.last_battle));
+        let cooldown = getTimeStamp(new Date(result.cooldown_expires));
+        let expiresAt = getTimeStamp(new Date(result.inviteExpiresAt));
+
+
         let embed = new MessageEmbed();
-        embed.setAuthor(result.name);
-        embed.addField('Account', `\`\`\`js\nCreated : ${new Date(result.joined_at)}\n LogOut : ${new Date(result.last_battle)}${previous}\`\`\``, true)
+        embed.setAuthor(`${result.name} | App ID: ${result.id}`);
+        embed.addField('Account', `\`\`\`js\n   Created : ${joinedAt}\nLastBattle : ${lastBattle}\n  Cooldown : ${cooldown}\`\`\``, true)
 
         if(result.stats === "Hidden") embed.addField('Statistics', `\`\`\`js\nProfile is Private\`\`\``)
-        else embed.addField('Statistics', `\`\`\`js\nBattles : ${result.stats.battles}\nWinRate : ${result.stats.wr}\nPer Day : ${result.stats.battles/(result.joined_at/60/60/24)}\`\`\``, true);
+        else embed.addField('Statistics', `\`\`\`js\nBattles : ${result.stats.battles}\nWinRate : ${roundTo(result.stats.wr, 2)}\nPer Day : ${roundTo(result.stats.battles/(result.joined_at/1000/60/60/24), 3)}\`\`\``, true);
 
         if(result.comment) embed.setDescription(`Application Message:\`\`\`\n${result.comment}\`\`\``)
-        embed.setFooter(`App expires at: ${new Date(result.inviteExpiresAt)}`)
+        embed.setFooter(`App expires at: ${expiresAt}`)
 
         embeds.push(embed);
     };
@@ -96,7 +135,7 @@ module.exports = async function (bot) {
 
     for (let x = 0; x < embedSections.length;x++){
 
-        bot.channels.cache.get('1137246476188274750').createWebhook(bot.user.username, {avatar: bot.user.displayAvatarURL({dynamic: true}), reason:"Applications Detected"})
+        bot.channels.cache.get('1222751535159578717').createWebhook(`New G-C-A Application${embeds.length>1?'s':''}!`, {avatar: bot.user.displayAvatarURL({dynamic: true}), reason:"Applications Detected"})
         .then(w => {
             w.send({
                 embeds: embedSections[x]

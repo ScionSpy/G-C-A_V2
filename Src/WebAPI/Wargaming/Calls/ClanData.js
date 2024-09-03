@@ -62,7 +62,30 @@ const API = new WargamingAPI();
  * @property {Date} updated_at Time at which the invite was last updated.
  * @property {Boolean} is_banned
  * @property {Date} created_at Time at which the invite was created.
+*/
+
+/**
+ * @typedef {Object} Application.Conf
+ * @property {Number} clan_id
+ * @property {Number} id Application ID
+ * @property {Number} account_id
  */
+/**
+ * @typedef {Object} Application.ConfErr
+ * @property {String} title Error Title
+ * * APPLICATION_IS_NOT_ACTIVE |
+ * @property {String} description Description of the error.
+ * @property {Object} additional_data
+ */
+/**
+ * @typedef {Object} Application.ConfErr.APPLICATION_IS_NOT_ACTIVE
+ * @property {String} title Error Title
+ * @property {String} description Description of the error.
+ * @property {Object} additional_data
+ * @property {String} additional_data.status Status of Application
+ * * "accepted" | "declined" | "expired"
+ */
+
 
 /**
  * @typedef {Object} InviteData
@@ -103,21 +126,56 @@ const API = new WargamingAPI();
  * @property {Date} updated_at Time at which the invite was last updated.
  * @property {Boolean} is_banned
  * @property {Date} created_at Time at which the invite was created.
+*/
+
+
+/**
+ * @typedef {Object} DivStars
+ * @property {Array<String>} clanClanstarsCount Key Value pair of each members DivStars in-clan. key = account ID. (See DivStars/Clan Results)
+ * @property {Array<DivStars.accountClanstars>} accountClanstars
+ * @property {Array<DivStars.AccountRewards>} accountRewards
+ * @property {Array<DivStars.RewardsInfo>} rewardsInfo key = stars needed for the reward. value = reward gained.
  */
+/**
+ * @typedef {Object} DivStars.accountClanstars
+ * @property {Number} spaId Player ID of the user this div star was gotten from.
+ * @property {Number} clanId Clan ID of the clan this divStar was obtained from.
+ * @property {String} questId Mission ID this star was completed for.
+ * * '1335c9ba-5e05-4cc2-a25c-10fc3a563e60' = "Win a Battle"
+ */
+/**
+ * @typedef {Object} DivStars.AccountRewards
+ * @property {Number} id
+ * @property {Number} spaId
+ * @property {Number} clanId
+ * @property {Number} clanstarsCount
+ * @property {String} status
+ * @property {Date} claimedAt Date this reward was claimed at.
+ * @property {Date} createdAt
+ * @property {Date} updatedAt
+ * @property {Number} seasonId
+ */
+/**
+ * @typedef {Object} DivStars.RewardsInfo
+ * @property {String} type Type of reward gained
+ * * 'lootbox'|'signal'|elite_xp'|'steel'|'oil'
+ * @property {Number|Null} id ID of the item-type rewarded.
+ * @property {Number} amount Number of this type given.
+ * @property {Null|Undefined} customisation
+*/
 
-
-
+const { Auth_Token } = require('../../apiConfig').Wargaming;
 
 module.exports = {
 
     /**
-     *
+     * @requires {String} Authorization Token
      * @returns {Array<ApplicationData>}
      */
     getApplications: async function getInviteApplications(){
         let query = "battle_type=pvp&order=-updated_at&offset=0&limit=100";
-        let auth = "hP9sI4SqE7SZR_6PFNrkegcmpaTMFbTYkMXQ6HGZhcjJxXDuvR8cw4MZyPBA5Zp6"; //DB.getAuthToken({name:"ShadowSpyy"});
 
+        let auth = Auth_Token; //DB.getAuthToken({name:"ShadowSpyy"});
         let Cookies = `wsauth_token=${auth}`;
 
         let results = await API.makeAPICall('api/recruitment/active_clan_applications/', query, Cookies);
@@ -125,6 +183,96 @@ module.exports = {
         if(results.applications) return results.applications;
         else return results;
     },
+
+    acceptApplicationError: async function (results) {
+        const additionalInfo = results.additional_info || {};
+        const reason = (results.title || '').toLowerCase();
+
+        let errorResponse = '';
+        switch (reason) {
+            case 'account_banned':
+                errorResponse = "Applicant's account is permamently banned.";
+                break;
+
+            case 'account_in_cooldown':
+                errorResponse = "Applicant's is currently on clan_cooldown. | " + additionalInfo.expires_at;
+                break;
+
+            case 'application_is_not_active':
+                errorResponse = `Applicant's application is no longer active. ${additionalInfo.status ? ` | ${additionalInfo.status}` : ''}`;
+                break;
+
+            case 'account_already_in_clan':
+                errorResponse = "Applicant has joined a different clan.";
+                break;
+
+            case 'insufficient_permissions':
+                errorResponse = "You do not have permission to accept this application. Please accept from in-game or using the [browser](https://clans.worldofwarships.com/requests).| <@213250789823610880> Your Auth_Token has expired!!";
+                break;
+
+            case 'clan_is_full':
+                errorResponse = "G-C-A does not have sufficiant space for this member! Our clan is full!";
+                break;
+
+            default:
+                errorResponse = "Unknown Error: ```js\n" + JSON.stringify(results, null, 4) + "\n```";
+        };
+
+        let Data = {
+            title: results.title,
+            description: results.description,
+            decodedResponse: errorResponse
+        };
+        Data.additional_info = results.additional_info ? results.additional_info : undefined;
+
+        Data.decodedResponse = errorResponse;
+        return Data;
+    },
+
+    declineApplicationError: async function (results) {
+        const reason = results.additional_info?.reason;
+        let errorResponse = '';
+        if (reason === 'application_is_not-Active') {
+            errorResponse = `Applicant's application is no longer active. ${additionalInfo.status ? ` | ${additionalInfo.status}` : ''}`;
+
+        } else if (reason === 'account_already_in_clan') {
+            errorResponse = "Applicant has joined a different clan.";
+
+        } else {
+            errorResponse = "Unknown Error: ```js\n" + JSON.stringify(results, null, 4) + "\n```";
+        };
+
+        let Data = {
+            title: results.title,
+            description: results.description,
+            decodedResponse: errorResponse
+        };
+        Data.additional_info = results.additional_info ? results.additional_info : undefined;
+
+        Data.decodedResponse = errorResponse;
+        return Data;
+    },
+
+    /**
+     * @requires {String} Authorization Token
+     * @param {Object} data
+     * @param {Number} data.id
+     * @param {String} data.status Status to send.
+     * * "Accepted" | "declined"
+     * @returns {Application.Conf|Application.ConfErr}
+     */
+    sendApplicationResponse: async function(data){
+        let auth = Auth_Token; //DB.getAuthToken({name:"ShadowSpyy"});
+        let Cookies = `wsauth_token=${auth}`;
+
+        let results = await API.makeApiCall_PATCH('api/recruitment/applications/' + data.id + '/', { status: data.status }, Cookies);
+
+        if(results.title || results.error){
+            if(data.status === "accepted") return await this.acceptApplicationError(results);
+            else return results; //await this.declineApplicationError(results);
+        } else return results;
+    },
+
 
     /**
      *
@@ -177,6 +325,19 @@ module.exports = {
         else return results;
     },
 
+    /**
+     *
+     * @returns {DivStars}
+     */
+    getDivStars: async function getDivisionStars(){
+        let auth = Auth_Token; //DB.getAuthToken({name:"ShadowSpyy"});
+        let Cookies = `wsauth_token=${auth}`;
+
+        let divStars = await API.makeAPICall('api/clanstars/get_account_state/', '', Cookies);
+
+        return divStars;
+    },
+
 
 
     lookup: async function clanLookup(query) {
@@ -219,5 +380,23 @@ module.exports = {
         };
 
         return clans;
+    },
+
+
+
+    /**
+     *
+     * @param {Array<Number} members
+     */
+    removeMembers: async function (clan_id, members) {
+        if(typeof members !== "object") throw new Error(`API.Clans.removeMembers(members); 'members' must be an array of numbers! got ${typeof members} : ${members}`);
+
+        let auth = Auth_Token; //DB.getAuthToken({name:"ShadowSpyy"});
+        let Cookies = `wsauth_token=${auth}`;
+
+        let body = {user_ids: members};
+
+        let results = await API.makeApiCall_POST('api/members/{clan_id}/remove_members/'.replace('{clan_id}', clan_id), body, Cookies);
+        return results;
     },
 };
