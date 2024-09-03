@@ -85,8 +85,8 @@ async function addPlayer(member, inviteData){
         rank: member.role,
         joined: member.joined_at * 1000,
         inviter: inviteData ? `${inviteData.sender.id} / ${inviteData.sender.name}` : 'Application',
-        oldMember
     };
+    if(oldMember) data.oldMember = oldMember;
 
     results.added.push(data);
 };
