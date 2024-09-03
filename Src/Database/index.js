@@ -5,7 +5,7 @@ module.exports = db = {};
 
 //#region Core Functions.
 db._Get = async function (table, data, proj, opt) {
-    if(data.name ** data.name === "Gemini66") data.name = "gemini66";
+    if(data && typeof data == "object" && data.name == "Gemini66") data.name = "gemini66";
     let res = await DB._Get(table, data, proj, opt);
     return res;
 };

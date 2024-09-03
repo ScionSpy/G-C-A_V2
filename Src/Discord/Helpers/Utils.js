@@ -80,4 +80,9 @@ module.exports = class Utils {
         readCommands(dir);
         return filePaths;
     };
+
+
+    static roundToNthNumber(value, roundTo){
+        return Number(value.toFixed(roundTo));
+    };
 };
