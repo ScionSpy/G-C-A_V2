@@ -2,6 +2,7 @@ const { description } = require('../../Discord/Structures/Command');
 const WebAPI = require('../index');
 const config = require('../apiConfig').Wargaming;
 const URI = config.path + '{PATH}/?application_id=' + config.app_id
+const app_id = config.app_id;
 
 const API_Errors = {
     'SEARCH_NOT_SPECIFIED': {
@@ -54,12 +55,37 @@ module.exports = class Wargaming_API extends WebAPI {
         super();
     };
 
-    async makeAPICall(path, query = "", auth = ""){
+    async handelApiError(err, path) {
+
+        if (!API_Errors[err.message]) return JSON.stringify(err, null, 4);
+        let API_Error = API_Errors[err.message];
+        let Data = {};
+
+        Data.code = API_Error.code;
+        Data.message = API_Error.message;
+        Data.description = API_Error[path].description
+        if (API_Error[path].min || API_Error[path].max) Data.characters = {};
+        if (API_Error[path].min) Data.characters ? Data.characters['min'] = API_Error[path].min : Data.characters['min'] = { min: API_Error[path].min };
+        if (API_Error[path].max) Data.characters ? Data.characters['max'] = API_Error[path].max : Data.characters['max'] = { max: API_Error[path].max };
+
+        return JSON.stringify(Data, null, 4);
+    };
+
+
+
+
+
+    #verifyPath(path){
+        if (!path.endsWith('/')) path = path + '/';
+        if (path.startsWith('wows')) path = config.URL.wows + path;
+        else if (path.startsWith('api')) path = config.URL.api + path;
+
+        return path;
+    };
+
+    async makeAPICall(path, query = "", auth = "",){
         if(query.startsWith('&')) query = query.slice(0,1);
-        if(!path.endsWith('/')) path = path + '/';
-        let app_id = config.app_id;
-        if(path.startsWith('wows')) path = config.URL.wows+path;
-        else if (path.startsWith('api')){ path = config.URL.api + path; app_id=""};
+        path = this.#verifyPath(path);
 
         let request = app_id ? `${path}?${config.app_id}&${query}` : `${path}?${query}`;
         let results;
@@ -75,19 +101,47 @@ module.exports = class Wargaming_API extends WebAPI {
         return results;
     };
 
-    async handelApiError(err, path){
 
-        if(!API_Errors[err.message]) return JSON.stringify(err, null, 4);
-        let API_Error = API_Errors[err.message];
-        let Data = {};
 
-        Data.code = API_Error.code;
-        Data.message = API_Error.message;
-        Data.description = API_Error[path].description
-        if (API_Error[path].min || API_Error[path].max) Data.characters = {};
-        if (API_Error[path].min) Data.characters ? Data.characters['min'] = API_Error[path].min : Data.characters['min'] = { min: API_Error[path].min };
-        if (API_Error[path].max) Data.characters ? Data.characters['max'] = API_Error[path].max : Data.characters['max'] = { max: API_Error[path].max };
+    async makeApiCall_POST(path, data = undefined, auth = "",) {
+        if (!data) throw new Error(`API.makeApiCall_POST(path, data, auth); {data} must be defined to send POST request!!`);
 
-        return JSON.stringify(Data, null, 4);
+        path = this.#verifyPath(path);
+
+        let results;
+
+        try {
+            data = JSON.stringify(data);
+            results = await this.__makePost(path, auth, data);
+        } catch (err) {
+            results = err;
+        };
+
+        if (config.Debug) console.log(`WargamingAPI.makeAPICall() ->\n`, results);
+
+        return results;
+
+    };
+
+
+
+    async makeApiCall_PATCH(path, data = undefined, auth = "",) {
+        if(!data) throw new Error(`API.makeApiCall_PATCH(path, data, auth); {data} must be defined to send PATCH request!!`);
+
+        path = this.#verifyPath(path);
+
+        let results;
+
+        try {
+            data = JSON.stringify(data);
+            results = await this.__makePatch(path, auth, data);
+        } catch (err) {
+            results = err;
+        };
+
+        if (config.Debug) console.log(`WargamingAPI.makeAPICall() ->\n`, results);
+
+        return results;
+
     };
 };
