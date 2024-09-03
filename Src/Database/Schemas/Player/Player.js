@@ -154,7 +154,7 @@ module.exports = class Player extends Database {
 
         this.name = name;
         res.members = await this._Edit("Members", { id: this.id }, { name });
-        res.verified = await this._Edit("Verified", { id: this.id }, { name });
+        if(this.discord_id) res.verified = await this._Edit("Verified", { id: this.id }, { name });
         res.verified = await this._Edit("Admin", { id: this.id }, { name });
 
         return res;
@@ -215,7 +215,6 @@ module.exports = class Player extends Database {
 
         return results;
     };
-
 
     async toggleDM(unlocked){
         if(typeof unlocked !== "boolean") throw new Error(`[Database.Player.toggleDM(unlocked)] 'unlocked' expected Boolean, got ${typeof unlocked}`);

@@ -69,6 +69,7 @@ let results = {};
 async function addPlayer(member, inviteData){
     let player = new Player({ id: member.account_id });
     player = await player.load();
+    player.setName(member.account_name);
     player.toggleClanMember(true, member.role);
 
     let oldMember = "";
@@ -98,7 +99,7 @@ async function removePlayer(bot, member) {
     let player = new Player({ id: member.id });
     player = await player.load();
     player.toggleClanMember(false);
-    bot.
+    //Remove roles
 
     results.removed.push({
         id: member.id,
@@ -187,7 +188,7 @@ async function updateClanMembers(bot) {
         let member_id = clan.members_ids[x];
         if (!checked_ids.includes(member_id)) { // Member joined the clan since last check.
             let member = clan.members[member_id];
-            let invite = await bot.Clan.getInviteFor({name:member.account_name});
+            let invite = await bot.Clan.invites.getInviteFor({name:member.account_name});
             await addPlayer(member, invite);
         };
     };
@@ -251,5 +252,5 @@ module.exports = async (bot) => {
     bot.channels.cache.get('1136014419567067166').send(msg);
     if (adminMsg !== '__**Member Changes**__') bot.channels.cache.get('1222751535159578717').send(adminMsg);
     bot.channels.cache.get('1168784020109266954').send(JSON.stringify(results, null, 4), {code:'js', split:1});
-    bot.Clans = await bot.Clans._Load();
+    bot.Clan = await bot.Clan._Load();
 };
