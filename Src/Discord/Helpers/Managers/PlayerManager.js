@@ -1,4 +1,5 @@
 const { Player, DiscordPlayer } = require('../../../Database/Schemas/index').Players;
+const { Players } = require('../../../WebAPI/Wargaming/index');
 const Database = require('../../../Database/core');
 const { Collection } = require('discord.js');
 
@@ -38,7 +39,7 @@ module.exports = class Manager {
         };
     };
 
-    getCache(){
+    async getCache(){
         return this.#cache;
     };
 
@@ -65,6 +66,14 @@ module.exports = class Manager {
         };
 
         //ToDo: If(!player) player = pullFromWargamingAPI();
+        if(!player || !player.id || !player.name){
+            let PlayerData = await Players.getDetails(player_id.toString());
+            let PlayerClan = await Players.getClanInfo(player_id.toString());
+            let wgPlayer = await new Player({id:player_id});
+            wgPlayer = await wgPlayer.create(PlayerData, PlayerClan);
+
+            player = wgPlayer;
+        };
 
         this.#saveToCache(player);
         return player;
