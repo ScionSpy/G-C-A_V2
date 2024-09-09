@@ -1,37 +1,8 @@
 const { MessageEmbed } = require('discord.js');
 const { Clans, Players } = require('../../../WebAPI/Wargaming/index');
 const roundTo = require('../../Helpers/Utils').roundToNthNumber;
+const Utils = require('../../Helpers/Utils');
 const Util = require('../../../WebAPI/Utils');
-
-/**
- *
- * @param {Number} value
- */
-function getLength(value){
-    return value.toString().length;
-};
-
-/**
- *
- * @param {Date} Date
- */
-function getTimeStamp(Date){
-
-    let Year = Date.getFullYear();
-    let Month = Date.getMonth() +1;
-    let Day = Date.getDate();
-    let Hour = Date.getHours();
-    let Minute = Date.getMinutes();
-    let Second = Date.getSeconds();
-
-    if (getLength(Month) == 1) Month = `0${Month}`;
-    if (getLength(Day) == 1) Day = `0${Day}`;
-    if (getLength(Hour) == 1) Hour = `0${Hour}`;
-    if (getLength(Minute) == 1) Minute = `0${Minute}`;
-    if (getLength(Second) == 1) Second = `0${Second}`;
-
-    return `${Year}-${Month}-${Day} ${Hour}:${Minute}:${Second} EST`;
-};
 
 
 /** @param {import('../../Structures/BotClient')} bot */
@@ -112,10 +83,10 @@ module.exports = async function (bot) {
         let result = results[x];
         console.log(result)
 
-        let joinedAt = getTimeStamp(new Date(result.joined_at));
-        let lastBattle = getTimeStamp(new Date(result.last_battle));
-        let cooldown = getTimeStamp(new Date(result.cooldown_expires));
-        let expiresAt = getTimeStamp(new Date(result.inviteExpiresAt));
+        let joinedAt = Utils.getTimeStamp(new Date(result.joined_at));
+        let lastBattle = Utils.getTimeStamp(new Date(result.last_battle));
+        let cooldown = Utils.getTimeStamp(new Date(result.cooldown_expires));
+        let expiresAt = Utils.getTimeStamp(new Date(result.inviteExpiresAt));
 
 
         let embed = new MessageEmbed();

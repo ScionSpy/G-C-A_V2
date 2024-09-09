@@ -85,4 +85,57 @@ module.exports = class Utils {
     static roundToNthNumber(value, roundTo){
         return Number(value.toFixed(roundTo));
     };
+
+
+    /**
+     * @param {Object} options
+     * @param {Date} options.Date
+     * @param {Boolean} options.UTC Set timestamp as UTC.
+     */
+    static getTimeStamp(options = {Date: new Date(), UTC: false}) {
+        if(options.UTC && typeof options.UTC !== "boolean") throw new Error(`Utils.getTimeStamp(options = {Date, UTC}); {options.UTC} if provided Must be a Boolean! got ${typeof options.UTC} : ${options.UTC}`);
+
+        /**
+         *
+         * @param {Number} value
+         */
+        function getLength(value) {
+            return value.toString().length;
+        };
+
+        let date = options.Date// ? options.Date : new Date();
+        if(!date) date = new Date();
+
+        let Year;
+        let Month;
+        let Day;
+        let Hour;
+        let Minute;
+        let Second;
+
+        if(!options.UTC){
+            Year = date.getFullYear();
+            Month = date.getMonth() + 1;
+            Day = date.getDate();
+            Hour = date.getHours();
+            Minute = date.getMinutes();
+            Second = date.getSeconds();
+
+        } else {
+            Year = date.getUTCFullYear();
+            Month = date.getUTCMonth() + 1;
+            Day = date.getUTCDate();
+            Hour = date.getUTCHours();
+            Minute = date.getUTCMinutes();
+            Second = date.getUTCSeconds();
+        };
+
+
+        if (getLength(Month) == 1) Month = `0${Month}`;
+        if (getLength(Day) == 1) Day = `0${Day}`;
+        if (getLength(Hour) == 1) Hour = `0${Hour}`;
+        if (getLength(Minute) == 1) Minute = `0${Minute}`;
+        if (getLength(Second) == 1) Second = `0${Second}`;
+        return `${Year}-${Month}-${Day} ${Hour}:${Minute}:${Second} ${options.UTC ? 'UTC' : 'EST'}`;
+    };
 };
