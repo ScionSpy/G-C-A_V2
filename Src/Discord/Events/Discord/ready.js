@@ -21,9 +21,29 @@ module.exports = async (client) => {
 };
 
 
+const nextTime = {
+    "midnight": function (d = new Date()) {
+        let ms = new Date(d).setHours(24, 0, 0, 0) - d;
+        return ms;
+    },
+    'nextFifthMinute': function(d = new Date()){
+        let coff = 1000 *60 *5;
+        let nextNthMin = new Date(Math.ceil(d / coff) * coff);
+        return nextNthMin - d.getTime();
+    },
+    'nextHour': function (d = new Date()) {
+        let coff = 1000 * 60 * 60;
+        let nextNthMin = new Date(Math.ceil(d / coff) * coff);
+        return nextNthMin - d.getTime();
+    },
+};
+
 const gcaEvents = [
-    { enabled: true, timer: 1000*60*15, name: 'updateClanMembers' },
-    { enabled: true, timer: 1000*60*15, name: 'fetchApplications' },
+    { enabled: true, timer: 1000 *60 *15, name: 'updateClanMembers' },
+    { enabled: true, timer: 1000 *60 *15, name: 'fetchApplications' },
+    { enabled: true, timer: 1000 *60 *5, name: 'fetchLastBattles', wait: nextTime.nextFifthMinute() },
+    //{ enabled: false, timer: -1, name: 'navalBattles', wait: nextTime}
+    //{ enabled: false, timer: -1, name: 'clanBattles', wait: nextTime}
 ];
 
 function startTimers(client){
@@ -33,10 +53,20 @@ function startTimers(client){
         let event = gcaEvents[x];
         if(!event.enabled) return;
 
-        client.emit(event.name, client);
-
-        setInterval(function () {
+        timerFunction = function () {
             client.emit(event.name, client);
-        }, event.timer);
+        };
+
+        if (event.wait){
+            console.log(`Event: "${event.name}" is waiting ${Math.round(event.wait /1000 /60)} minutes for first fire.`);
+            setTimeout(function(){
+                client.emit(event.name, client);
+                setInterval(timerFunction, event.timer);
+            }, event.wait);
+
+        } else{
+            client.emit(event.name, client);
+            setInterval(timerFunction, event.timer);
+        };
     };
 };
