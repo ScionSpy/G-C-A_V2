@@ -1,4 +1,5 @@
 const { EmbedBuilder, ApplicationCommandOptionType, MessageEmbed } = require("discord.js");
+const Database = require('../../../Database/index');
 const { EMBED_COLORS } = require("../../../config");
 
 // This dummy token will be replaced by the actual token
@@ -25,6 +26,7 @@ module.exports = {
         try {
             //Define Eval phrases.
             const bot = message.client;
+            const DB = Database;
             const e = new MessageEmbed();
 
             let output = eval(input);
@@ -70,4 +72,3 @@ const buildErrorResponse = (err) => {
     else if (!err.stack) return err;
     else return err.stack;
 };
-

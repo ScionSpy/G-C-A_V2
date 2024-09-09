@@ -1,4 +1,4 @@
-const DB = require('../index.js');
+const DB = require('../../index.js');
 const { Clans } = require('../../../WebAPI/Wargaming/index.js');
 const { Ranks } = require('../../../Constants.js');
 
@@ -28,6 +28,8 @@ module.exports = class Clan {
         this.founder = { id:clan.creator_id, name:clan.creator_name };
         this.members = clan.members;
         this.member_ids = clan.members_ids;
+
+        return this;
     };
 
     applications = require('./applications.js');

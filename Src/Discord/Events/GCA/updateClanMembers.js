@@ -66,11 +66,11 @@ let results = {};
  * @param {import('../../../WebAPI/Wargaming/Calls/ClanData.js').Clan_Member} member Member joining the Clan.
  * @param {import('../../../WebAPI/Wargaming/Calls/ClanData.js').InviteData} inviteData invite the member joined with.
  */
-async function addPlayer(member, inviteData){
+async function addPlayer(member, inviteData) {
     let player = new Player({ id: member.account_id });
     player = await player.load();
-    player.setName(member.account_name);
-    player.toggleClanMember(true, member.role);
+    if(!player.name) player = await player.create(member, inviteData);
+    else await player.toggleClanMember(true, member.role);
 
     let oldMember = "";
     if(player?.stats?.left) oldMember = {
@@ -100,6 +100,7 @@ async function removePlayer(bot, member) {
     player = await player.load();
     player.toggleClanMember(false);
     //Remove roles
+    //if (player.discord_id) await removeMemberRoles();
 
     results.removed.push({
         id: member.id,

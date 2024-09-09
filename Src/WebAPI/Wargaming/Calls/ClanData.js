@@ -375,7 +375,7 @@ module.exports = {
 
             let results = await API.makeAPICall('wows/clans/info', `extra=members&clan_id=${queryData[x].join(',')}`);
 
-            if (results.status === "error") throw new Error(`WargamingAPI.getClanDetails(query='${results.error.value}') -> ` + await API.handelApiError(results.error, 'clans/info'));
+            if (results.status === "error") throw new Error(`WargamingAPI.getClanDetails(query='${query}') -> Sent query=${results.error.value}` + await API.handelApiError(results.error, 'clans/info'));
             else clans = clans.concat(results.data);
         };
 
