@@ -1,4 +1,8 @@
 const { presenceHandler } = require("../../Handlers");
+const ClanBattles = require('../../../Modules/ClanBattles/index');
+const DB = require('../../../Database/index');
+const Player = require('../../../Database/Schemas/Player/Player');
+const DiscordPlayer = require("../../../Database/Schemas/Player/DiscordPlayer");
 //const { cacheReactionRoles } = require("@schemas/ReactionRoles");
 //const { getSettings } = require("@schemas/Guild");
 
@@ -18,6 +22,9 @@ module.exports = async (client) => {
     // let data = await client.emit('updateClanMembers', client);
 
     startTimers(client);
+    //client.loadingMembers = true;
+    await loadMembers(client);
+    //delete client.loadingMembers;
 };
 
 
@@ -36,32 +43,34 @@ const nextTime = {
         let nextNthMin = new Date(Math.ceil(d / coff) * coff);
         return nextNthMin - d.getTime();
     },
+    //'nextClanBattle': require()
 };
 
 const gcaEvents = [
-    { enabled: true, timer: 1000 *60 *15, name: 'updateClanMembers' },
+    { enabled: false, timer: 1000 *60 *15, name: 'updateClanMembers' }, // ToDo: Update via bot.Players
     { enabled: true, timer: 1000 *60 *15, name: 'fetchApplications' },
     { enabled: true, timer: 1000 *60 *5, name: 'fetchLastBattles', wait: nextTime.nextFifthMinute() },
     //{ enabled: false, timer: -1, name: 'navalBattles', wait: nextTime}
-    //{ enabled: false, timer: -1, name: 'clanBattles', wait: nextTime}
+    { enabled: true, name: 'clanBattles', customTimer: ClanBattles.setEventTimers}
 ];
 
 function startTimers(client){
-
-
     for(let x = 0; x < gcaEvents.length; x++){
         let event = gcaEvents[x];
-        if(!event.enabled) return;
+        if(!event.enabled) continue;
 
         timerFunction = function () {
             client.emit(event.name, client);
         };
 
-        if (event.wait){
-            console.log(`Event: "${event.name}" is waiting ${Math.round(event.wait /1000 /60)} minutes for first fire.`);
+        if (event.customTimer){
+            console.log(`• Event: ${event.name} executing custom timer data.`);
+            event.customTimer(client);
+        } else if (event.wait){
+            console.log(`• Event: "${event.name}" is waiting ${Math.round(event.wait /1000 /60)} minutes for first fire.`);
             setTimeout(function(){
                 client.emit(event.name, client);
-                setInterval(timerFunction, event.timer);
+                if (event.timer) setInterval(timerFunction, event.timer);
             }, event.wait);
 
         } else{
@@ -69,4 +78,36 @@ function startTimers(client){
             setInterval(timerFunction, event.timer);
         };
     };
+};
+
+
+
+async function loadMembers(bot){
+    let members = await DB._Get("Members", {active:true});
+
+    for(let x = 0; x < members.length; x++){
+            let member = members[x];
+            let player;
+        try{
+            let index = bot.Players.length;
+
+            if (!member.discord_id){
+                player = new Player({id:member.id});
+                player = await player.load();
+            } else {
+                player = new DiscordPlayer({discord_id:member.discord_id}, bot);
+                player = await player.loadDiscord();
+            };
+
+            if(player) bot.Players.push(player);
+            else console.log(member);
+            bot.PlayersIndex.set(player.id, index);
+            bot.PlayersIndex.set(player.name, index);
+            if (member.discord_id) bot.PlayersIndex.set(player.discord_id, index);
+        } catch(err){
+            console.error(`Event.ready() Failed loading player [ ${member.id} ] to cache!`, err);
+        };
+    };
+
+    console.log(`Loaded ${members.length} Active members to the Cache.`);
 };
