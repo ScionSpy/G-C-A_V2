@@ -83,17 +83,21 @@ module.exports = class Wargaming_API extends WebAPI {
         return path;
     };
 
-    async makeAPICall(path, query = "", auth = "",){
-        if(query.startsWith('&')) query = query.slice(0,1);
+    async makeAPICall(path, query = "", auth = ""){
+        if(query && !query.startsWith('&')) query = '&'+query;
         path = this.#verifyPath(path);
 
-        let request = app_id ? `${path}?${config.app_id}&${query}` : `${path}?${query}`;
+        let request = app_id ? `${path}?${config.app_id}${query}` : `${path}?${query}`;
+        /*let request;
+        if (path.startsWith("wows")) request = app_id ? `${path}?${config.app_id}${query}` : `${path}?${query}`;
+        else request = `${path}?${query}`;*/
         let results;
 
         try{
             results = await this.__makeRequest(request, auth);
         }catch(err){
             results = err;
+            console.log(`(${Date.now()}) API Error: makeApiCall(auth = ${auth}, request = ${request})`, err);
         };
 
         if(config.Debug) console.log(`WargamingAPI.makeAPICall() ->\n`, results);
@@ -115,6 +119,7 @@ module.exports = class Wargaming_API extends WebAPI {
             results = await this.__makePost(path, auth, data);
         } catch (err) {
             results = err;
+            console.log(`(${Date.now()}) API Error: makeApiCall_POST(path = ${path}, auth = ${auth}, data = ${data})`, err);
         };
 
         if (config.Debug) console.log(`WargamingAPI.makeAPICall() ->\n`, results);
@@ -137,6 +142,7 @@ module.exports = class Wargaming_API extends WebAPI {
             results = await this.__makePatch(path, auth, data);
         } catch (err) {
             results = err;
+            console.log(`(${Date.now()}) API Error: makeApiCall_PATCH(path = ${path}, auth = ${auth}, data = ${data})`, err);
         };
 
         if (config.Debug) console.log(`WargamingAPI.makeAPICall() ->\n`, results);

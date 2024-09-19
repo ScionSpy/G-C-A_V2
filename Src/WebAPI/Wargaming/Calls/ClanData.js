@@ -384,6 +384,18 @@ module.exports = {
 
 
 
+    getClanBattles: async function(query = 1){
+        let auth = "hP9sI4SqE7SZR_6PFNrkegcmpaTMFbTYkMXQ6HGZhcjJxXDuvR8cw4MZyPBA5Zp6"; //await DB.getAuthToken({name:"ShadowSpyy"});
+        let Cookies = `wsauth_token=${auth}`;
+
+        let clanBattles = await API.makeAPICall(`api/ladder/battles`, `team=${query}`, Cookies);
+        if (clanBattles == 'Forbidden') throw new Error(`ClanBattles.getClanBattles(); Failed Authorization!`);
+
+        return clanBattles;
+    },
+
+
+
     /**
      *
      * @param {Array<Number} members
