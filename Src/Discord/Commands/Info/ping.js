@@ -1,5 +1,5 @@
 /**
- * @type {import("@structures/Command")}
+ * @type {import("../../Structures/Command")}
  */
 module.exports = {
     name: "ping",

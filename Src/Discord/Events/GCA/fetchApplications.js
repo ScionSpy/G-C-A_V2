@@ -7,9 +7,10 @@ const Util = require('../../../WebAPI/Utils');
 
 /** @param {import('../../Structures/BotClient')} bot */
 module.exports = async function (bot) {
+    console.log(`Start Event.fetchApplications()`);
     let applications = await bot.Clan.applications.getApplications();
 
-    if(applications.length == 0) return;
+    if (applications.length == 0) return console.log(`• End Event.fetchApplications()`);
     let dbApps = await bot.DB._Get("Applications", {}, {id:1, expires_at:1});
     let dbAppsList = [];
 
@@ -27,7 +28,7 @@ module.exports = async function (bot) {
         players.push(app.account.id);
 
         let appData = structuredClone(app);
-        appData.expires_at = app.expires_at*1000
+        appData.expires_at = app.inviteExpiresAt;
         bot.DB._Post("Applications", appData);
     };
 
@@ -69,6 +70,7 @@ module.exports = async function (bot) {
             id: app.id,
             name: app.account.name,
             comment: app.comment,
+            inviteCreatedAt: app.created_at,
             inviteExpiresAt: app.expires_at,
             joined_at: playerData[app.account.id].created_at,
             cooldown_expires: app.account.in_clan_cooldown_till,
@@ -108,7 +110,7 @@ module.exports = async function (bot) {
 
         bot.channels.cache.get('1222751535159578717').createWebhook(`New G-C-A Application${embeds.length>1?'s':''}!`, {avatar: bot.user.displayAvatarURL({dynamic: true}), reason:"Applications Detected"})
         .then(w => {
-            w.send({
+            w.send(`<@&1126377465741324437>`, {
                 embeds: embedSections[x]
             })
             .then(() => {
@@ -119,4 +121,6 @@ module.exports = async function (bot) {
             throw new Error(`bot.Event('fetchApplications'); -> ${err.stack}`);
         });
     };
+
+    console.log(`• End Event.fetchApplications()`);
 };

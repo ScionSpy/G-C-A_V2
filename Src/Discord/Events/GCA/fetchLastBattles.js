@@ -8,6 +8,7 @@ module.exports = async function(bot){ console.log(`\nStart Event.fetchLastBattle
     GCA = GCA[0][clan_id];
 
     let MemberStats = await Players.getDetails(GCA.members_ids.join(","));
+    if (MemberStats.length == 0) console.log(`(${Date.now}) Event.fetchLastBattles(); Error, MemberStats from Players.getDetails().makeApiCall('account/info') is empty!`);
     let Members = await DB._Get("Members", {active:true});
 
     let lastBattleTimes = {};

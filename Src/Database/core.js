@@ -114,8 +114,8 @@ module.exports = class Database {
         if (typeof proj !== "undefined" && typeof proj !== "object") throw new Error(`[Database._Get()] 'proj' must be undefined or an object! Got ${typeof proj}!`);
         if (opt){
             if (typeof opt !== "object") throw new Error(`[Database._Get()] 'opt' must be undefined or an object! Got ${typeof opt}`);
-            if (opt.sort && (typeof opt.sort !== Number || opt.sort !== 0 || opt.sort !== 1)) throw new Error(`[Database._Get()] 'opt.sort' must be undefined or a Number with a value of 0 or 1 Got ${typeof opt.sort} : ${opt.sort}`);
-            if (opt.limit && typeof opt.limit !== Number) throw new Error(`[Database._Get()] 'opt.limit' must be undefined or a Number with a value of 0 or 1 Got ${typeof opt.limit}`);
+            if (opt.limit && typeof opt.limit !== "number") throw new Error(`[Database._Get()] 'opt.limit' must be undefined or a Number with a value greater than 1. Got ${typeof opt.limit} : ${opt.limit}`);
+            if (opt.sort && (typeof opt.sort !== "object")) throw new Error(`[Database._Get()] 'opt.sort' must be undefined or an object with a key value of -1 or 1 Got ${typeof opt.sort} : ${opt.sort}`);
         };
 
         if (!query) query = {};

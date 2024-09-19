@@ -107,6 +107,11 @@ module.exports = class Clan {
         return { users: DivStars.length, counts:DivStars };
     };
 
+    getSavedApplications = async function(query = {}){
+        let apps = await DB._Get("Applications", query);
+        return apps;
+    };
+
 
     /**
      *
