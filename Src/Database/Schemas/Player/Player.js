@@ -10,10 +10,11 @@ module.exports = class Player extends Database {
     constructor(Data){
         super();
 
-        if (!Data.id && !Data.name) throw new Error(`Database.Player(Data); 'data' requires data.id or data.name to load!`);
+        if (!Data.id && !Data.name && !Data.discord_id) throw new Error(`Database.Player(Data); 'data' requires data.id or data.name or data.discord_id to load!`);
 
         this.id = Data.id || null;
         this.name = Data.name || null;
+        this.discord_id = Data.discord_id || null;
 
         this.needsLoading = true;
     };
@@ -100,9 +101,10 @@ module.exports = class Player extends Database {
 
     async load(){
         let query;
-        console.log(this)
-        if(this.id) query = {id:this.id};
-        else query = {name:this.name};
+
+        if (this.id) query = {id:this.id};
+        else if (this.name) query = {name:this.name};
+        else query = {discord_id:this.discord_id};
 
         let verifiedUser = await this._Get("Verified", query) || null;
         let clanMember = await this._Get("Members", query) || null;
@@ -179,8 +181,32 @@ module.exports = class Player extends Database {
     };
 
 
-    isRecruiter(){
-        if (this.clan && this.clan.id == Constants.GCA.id && Constants.Ranks.Values[this.clan.rank] > 3) return true;
+    isNonComissioned() {
+        if (this.clan && this.clan.id == Constants.GCA.id && Constants.Ranks.Values[this.clan.rank] < 3) return true;
+        else return false;
+    };
+
+
+    isRecruiter(exact) {
+        if (this.clan && this.clan.id == Constants.GCA.id) {
+            if (!exact && Constants.Ranks.Values[this.clan.rank] > 3) return true;
+            else if (exact && Constants.Ranks.Values[this.clan.rank] == 3) return true;
+            else false;
+        } else return false;
+    };
+
+
+    isXO(exact) {
+        if (this.clan && this.clan.id == Constants.GCA.id){
+            if (!exact && Constants.Ranks.Values[this.clan.rank] > 4) return true;
+            else if (exact && Constants.Ranks.Values[this.clan.rank] == 4) return true;
+            else false;
+        } else return false;
+    };
+
+
+    isCO() {
+        if (this.clan && this.clan.id == Constants.GCA.id && Constants.Ranks.Values[this.clan.rank] == 5) return true;
         else return false;
     };
 
@@ -291,7 +317,7 @@ module.exports = class Player extends Database {
         return res;
     };
 
-    async deactivateMember() {
+    async #deactivateMember() {
         let res = {
             member: null,
             admin: null
@@ -338,7 +364,7 @@ module.exports = class Player extends Database {
         let results;
         if (status == false){
             role = null;
-            results = await this.deactivateMember();
+            results = await this.#deactivateMember();
         } else {
             results = await this._Edit("Members", { id: this.id }, { active: status, clan_role: role });
             await this.load();

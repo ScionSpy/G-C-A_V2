@@ -39,7 +39,9 @@ module.exports = class BotClient extends Client {
         let clan = new Clans.Clan({ id: clan_id });
         this.Clan = clan;//._Load();
 
-        this.Players = new PlayerManager(this);
+        //this.Players = new PlayerManager(this);
+        this.Players = [];
+        this.PlayersIndex = new Collection();
     };
 
     /**
