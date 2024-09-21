@@ -101,7 +101,7 @@ module.exports = {
 
 
     async getPlayer(author, sub, limit){
-        if(author.name !== sub && !author.isRecruiter()) return;
+        if(!author || (author.name !== sub && !author.isRecruiter())) return;
         return await this.getPlayerActivity(limit, sub);
     },
 
