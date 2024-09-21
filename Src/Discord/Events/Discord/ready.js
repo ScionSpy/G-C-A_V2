@@ -110,8 +110,7 @@ async function loadMembers(bot){
             else console.log(member);
             bot.PlayersIndex.set(player.id, index);
             bot.PlayersIndex.set(player.name, index);
-            if (member.discord_id) bot.PlayersIndex.set(player.discord_id, index);
-        } catch(err){
+            bot.PlayersIndex.set(player.name.toLowerCase(), index);
             console.error(`Event.ready() Failed loading player [ ${member.id} ] to cache!`, err);
         };
     };
