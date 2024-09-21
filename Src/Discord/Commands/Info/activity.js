@@ -61,7 +61,6 @@ module.exports = {
             if (isNaN(args[0])) sub = args.shift();
             else limit = args.shift();
 
-            console.log(args, limit, sub);
             activity = await this.getPlayer(message.author.player, sub, Number(limit));
         };
 
