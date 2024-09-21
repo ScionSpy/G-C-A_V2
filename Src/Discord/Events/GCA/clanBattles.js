@@ -26,9 +26,9 @@ async function callToArms(bot) {
     ch_clanBattles.send(`<@&1126377465741324435>, <@&1126377465741324434>\n> :crossed_swords: Clan Battles start in 30 Minutes! :crossed_swords: \n\n Remember **do NOT Ready** if you're going to be in the armoury!!\n You WILL get stuck on the laoding screen!!`);
 
     //TODO: Make another call requesting {x} members at 7:30
-    setTimeout(async function(){
+    /*setTimeout(async function(){
         callToArms_Extra(bot);
-    }, 1000 *60 *25);
+    }, 1000 *60 *25);*/
 };
 
 async function callToArms_Extra(bot) {
@@ -46,7 +46,7 @@ async function callToArms_Extra(bot) {
 };
 
 
-let results = [{ name: "wins", wins: 0 }, { name: "losses", losses: 0 }];
+let results = [{ name: "wins", wins: 0 }, { name: "losses", losses: 0 }, { name: "maps", list: []}];
 function resultsHas(title) {
     for (let x = 0; x < results.length; x++) {
         let key = results[x];
@@ -55,26 +55,55 @@ function resultsHas(title) {
     return false;
 };
 
+function resultsHas2(title) {
+    for (let x = 0; x < results[2].list.length; x++) {
+        let key = results[2].list[x];
+        if (key.name === title) return x;
+    };
+    return false;
+};
 
-async function formResults(stats, div){
 
+async function formResults(stats, div, getMaps){
     for (let x = 0; x < div.length; x++) {
         let key = div[x];
-        if (key.name == "wins"){
-            results[0].wins += stats.wins;
-            continue;
-        }else if (key.name == "losses"){
-            results[1].losses += stats.losses;
-            continue;
-        };
 
-        let index = resultsHas(key.name);
-        if (!results[index]) {
-            results.push({ name: key.name, wins: 0, losses: 0 });
-            index = results.length - 1;
+        if (getMaps){
+            if (key.name == "maps") {
+                for (let map in key) {
+                    if (map == "name") continue;
+                    map = key[map];
+                    for(let x = 0; x < map.length; x++){
+                        let Map = map[x];
+                        let index = resultsHas2(Map.name);
+                        if (!results[2].list[index]) {
+                            results[2].list.push({ name: Map.name, wins: 0, losses: 0 });
+                            index = results[2].list.length - 1;
+                        };
+
+                        results[2].list[index].wins += Map.wins;
+                        results[2].list[index].losses += Map.losses;
+                    };
+                };
+            };
+
+        }else{
+            if (key.name == "wins"){
+                results[0].wins += stats.wins;
+                continue;
+            } else if (key.name == "losses"){
+                results[1].losses += stats.losses;
+                continue;
+            };
+
+            let index = resultsHas(key.name);
+            if (!results[index]) {
+                results.push({ name: key.name, wins: 0, losses: 0 });
+                index = results.length - 1;
+            };
+            results[index].wins += key.wins;
+            results[index].losses += key.losses;
         };
-        results[index].wins += key.wins;
-        results[index].losses += key.losses;
     };
 
     return results;
@@ -120,14 +149,46 @@ let CB_COLLECTED_AT_DUTAION = Date.now();
     if(alpha.Embeds.length > 0 && bravo.Embeds.length > 0){
         await ch.send(`Tonights Stats; Alpha and Bravo Divs:\`\`\`js\n\ \ Wins : ${stats.alpha.wins + stats.bravo.wins}\nLosses : ${stats.alpha.losses + stats.bravo.losses}\`\`\``);
 
-        if(results.length > 2) results = [{ name: "wins", wins: 0 }, { name: "losses", losses: 0 }];
+        if(results.length > 2) results = [{ name: "wins", wins: 0 }, { name: "losses", losses: 0 }, {name: "maps", list: []}];
 
         await formResults(stats.alpha, alpha.results);
         await formResults(stats.bravo, bravo.results);
 
         await ch.send(await createResultsChart(results, 'Alpha and Bravo'));
 
-        //ch.send(`[CB_REVIEW_DURATION]:\n> Post tooke \`${CB_COLLECTED_AT_DUTAION - CB_REVIEW_DUTAION}\`ms to generate.\n> Post took \`${Date.now() - CB_REVIEW_DUTAION}\`ms to post to discord.`);
+        ch.send(`[CB_REVIEW_DURATION]:\n> Post tooke \`${CB_COLLECTED_AT_DUTAION - CB_REVIEW_DUTAION}\`ms to generate.\n> Post took \`${Date.now() - CB_REVIEW_DUTAION}\`ms to post to discord.`);
+    };
+
+    if(alpha.results.length > 0 || bravo.results.length > 0){
+
+        await formResults(stats.alpha, alpha.results, 'maps');
+        await formResults(stats.bravo, bravo.results, 'maps');
+
+        let list = [];
+        let total = { wins: 0, losses: 0, wlr: ''};
+        for(let x = 0; x < results[2].list.length; x++){
+            let map = results[2].list[x];
+            let wlr = Math.round((map.wins / (map.wins + map.losses)) * 100) / 100;
+            list.push({ wins: map.wins, losses: map.losses, wlr: `${wlr.toString().split('.')[1]}%`, name: map.name });
+            total.wins += map.wins;
+            total.losses += map.losses;
+        };
+        total.wlr = Math.round((total.wins / (total.wins + total.losses)) * 100) / 100;
+        total.wlr = total.wlr.toString().split('.');
+        total.wlr = `${total.wlr[1]}%`;
+
+        list.sort((b, a) => a.wlr.localeCompare(b.wlr) || a.name.localeCompare(b.name));
+
+
+        let postList = [];
+        for(let x = 0; x < list.length; x++){
+            let listItem = list[x];
+            postList.push(`{ wins: ${listItem.wins}, losses: ${listItem.losses}, wlr: ${listItem.wlr}, name: ${listItem.name} }`);
+        };
+
+        postList.push(`\n{ wins: ${total.wins}, losses: ${total.losses}, wlr: ${total.wlr} }`);
+        await ch.send(postList.join("\n"), {code:'js'});
+        await ch.send(await createResultsChart(results[2].list, 'Alpha and Bravo'));
     };
 };
 
@@ -149,7 +210,7 @@ async function createResultsChart(results, div){
     //chart.addLabel(`Overall`);
     for (let x = 0; x < results.length; x++) {
         let key = results[x];
-        if(key.name != "wins" && key.name != "losses") chart.addLabel(`[${key.name}]`);
+        if (key.name != "maps" && key.name != "wins" && key.name != "losses") chart.addLabel(`[${key.name}]`);
     };
 
     //chart.addDataset({ label: "Wins", color: "#16A067", });
@@ -164,7 +225,7 @@ async function createResultsChart(results, div){
     let minMax = { min:0, max:0 };
     for (let x = 0; x<results.length; x++) {
         let key = results[x];
-        if (key.name != "wins" && key.name != "losses"){
+        if (key.name != "maps" && key.name != "wins" && key.name != "losses"){
             /*chart.Datasets[0].data.push(results[key].wins);
             chart.Datasets[1].data.push(results[key].losses);
             wins += results[key].wins;
@@ -186,7 +247,19 @@ async function createResultsChart(results, div){
     else minMax = minMax.max;
 
     return await chart.save({
-        scales: { yAxes: [{ ticks: { min: minMax - minMax*2, max: minMax } }] },
+        scales: {
+            yAxes: [{
+                ticks: {
+                    min: minMax - minMax * 2,
+                    max: minMax,
+                    //color: "#FF0000",
+                },
+                /*grid: {
+                    color: "#00FFFF",
+                    drawOnChartArea: true
+                }*/
+            }]
+        },
     });
 
 };

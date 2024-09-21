@@ -144,11 +144,19 @@ async function setEventTimers(client) {
 };
 
 
-let results = [{ name: "wins", wins: 0, losses: 0 }, { name: "losses", wins: 0, losses: 0 }];
+let results = [ { name:"maps", list:[] }, { name: "wins", wins: 0, losses: 0 }, { name: "losses", wins: 0, losses: 0 }];
 function resultsHas(title){
     for(let x = 0; x < results.length; x++){
         let key = results[x];
         if(key.name === title) return x;
+    };
+    return false;
+};
+
+function resultsHas2(title) {
+    for (let x = 0; x < results[results.length -3].list.length; x++) {
+        let key = results[results.length - 3].list;
+        if (key.name === title) return x;
     };
     return false;
 };
@@ -173,7 +181,7 @@ async function fetchBattles(type) {
     console.log(`>> Fetching Clan Battles since: ${battlesSince}`);
 
     let battles = {};
-    if (results.length > 2) results = [{ name: "wins", wins: 0, losses: 0 }, { name: "losses", wins: 0, losses: 0 }];
+    if (results.length > 2) results = [{ name: "maps", list:[]}, { name: "wins", wins: 0, losses: 0 }, { name: "losses", wins: 0, losses: 0 }];
     let ships = {
         //ship_id = {type: Str:, arena_id: int = [{team:Str, player_id: int}]
     };
@@ -208,8 +216,8 @@ async function fetchBattles(type) {
 
         let battletime = Date.parse(battle.finished_at);
         if ((Now - battletime) > cutOff) {
-            lastBattle = (Now - battletime) / 1000 / 60 / 60 / 24 //Default
-            break; //Comment this line to gather "ALL" battles.
+            lastBattle = (Now - battletime) / 1000 / 60 / 60 / 19 //Default
+            if(!Config.getAllBattles) break; //Comment this line to gather "ALL" battles.
         };
 
         battles[battle.arena_id] = battle;
@@ -220,12 +228,19 @@ async function fetchBattles(type) {
             index = 0;
         };
 
+        let battleIndex = resultsHas2(battle.map);
+        if (!results[results.length - 3].list[battleIndex]) {
+            results[results.length - 3].list.unshift({ name: battle.map, wins: 0, losses: 0 });
+            battleIndex = 0;
+        };
 
         if (battle.isVictory === 'Victory'){
+            results[results.length - 3].list[battleIndex].wins++;
             results[results.length -2].wins++
             results[index].wins++
 
         } else {
+            results[results.length - 3].list[battleIndex].losses++;
             results[results.length - 1].losses++;
             results[index].losses++
         };
