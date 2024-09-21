@@ -54,28 +54,35 @@ const gcaEvents = [
     { enabled: true, name: 'clanBattles', customTimer: ClanBattles.setEventTimers}
 ];
 
+timerFunction = function (client, event) {
+    console.log('Firing event: ' + event.name + ' .timerFN() | ReFire in: ' + event.timer / 1000 / 60 + ' minutes.');
+    client.emit(event.name, client);
+};
+
 function startTimers(client){
     for(let x = 0; x < gcaEvents.length; x++){
         let event = gcaEvents[x];
         if(!event.enabled) continue;
-
-        timerFunction = function () {
-            client.emit(event.name, client);
-        };
 
         if (event.customTimer){
             console.log(`• Event: ${event.name} executing custom timer data.`);
             event.customTimer(client);
         } else if (event.wait){
             console.log(`• Event: "${event.name}" is waiting ${Math.round(event.wait /1000 /60)} minutes for first fire.`);
-            setTimeout(function(){
+            setTimeout(function () {
+                console.log('Firing event: ' + event.name + ' .wait() | ReFire in: ' + event.timer / 1000 / 60 + ' minutes.');
                 client.emit(event.name, client);
-                if (event.timer) setInterval(timerFunction, event.timer);
+                if (event.timer) setInterval(function () {
+                    timerFunction(client, event)
+                }, event.timer);
             }, event.wait);
 
-        } else{
+        } else {
+            console.log('Firing event: ' + event.name + ' .timer() | ReFire in: ' + event.timer / 1000 / 60 + ' minutes.');
             client.emit(event.name, client);
-            setInterval(timerFunction, event.timer);
+            setInterval(function(){
+                timerFunction(client, event)
+            }, event.timer);
         };
     };
 };

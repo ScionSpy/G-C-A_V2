@@ -3,7 +3,8 @@ const clan_id = require('../../../Constants.js').GCA.id;
 const DB = require('../../../Database/index.js');
 const Utils = require('../../Helpers/Utils.js');
 
-module.exports = async function(bot){ console.log(`\nStart Event.fetchLastBattles()`);
+module.exports = async function(bot){try{
+    console.log(`\nStart Event.fetchLastBattles()`);
     let GCA = await Clans.getDetails(clan_id);
     GCA = GCA[0][clan_id];
 
@@ -87,4 +88,7 @@ module.exports = async function(bot){ console.log(`\nStart Event.fetchLastBattle
         console.log(`Re-Executing 'FetchLastBattles' event for first run completion.`);
         bot.emit('fetchLastBattles', bot);
     };
+}catch(err){
+    console.error(`Error executing Event.fetchLastBattles()`, err);
+};
 };
