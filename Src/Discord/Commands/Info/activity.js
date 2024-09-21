@@ -112,12 +112,15 @@ module.exports = {
      * @param {import('../../../Database/Schemas/index').Players.Player} player
      * @returns
      */
-    async getPlayerActivity(limit = 48, player) {
+    async getPlayerActivity(limit = 48, playerName) {
         if ((typeof limit !== "number" && typeof limit !== "undefined") || limit < 0) throw new Error(`Cmd.Activity.getPlayerActivity(limit, player); {limit} must be a number over 0. got ${typeof limit} : ${limit}`);
-        if ((typeof player !== "string")) throw new Error(`Cmd.Activity.getPlayerActivity(limit, player); {player} must be a string. got ${typeof player} : ${player}`);
+        if ((typeof playerName !== "string")) throw new Error(`Cmd.Activity.getPlayerActivity(limit, playerName); {playerName} must be a string. got ${typeof playerName} : ${playerName}`);
 
-        player = bot.Players[bot.PlayersIndex.get(player)];
-        if(!player) return;
+
+        let player = bot.Players[bot.PlayersIndex.get(playerName)];
+        if (!player) player = bot.Players[bot.PlayersIndex.get(playerName.toLowerCase())];
+        if (!player) return;
+
 
         let activity = await this.getActivityData(limit, player.id);
 
