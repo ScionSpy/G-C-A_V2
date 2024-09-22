@@ -166,19 +166,34 @@ let CB_COLLECTED_AT_DUTAION = Date.now();
 
         let list = [];
         let total = { wins: 0, losses: 0, wlr: ''};
-        for(let x = 0; x < results[2].list.length; x++){
+        for(let x = 0; x < results[2].list.length; x++){ // Calculate per map.
             let map = results[2].list[x];
-            let wlr = Math.round((map.wins / (map.wins + map.losses)) * 100) / 100;
-            list.push({ wins: map.wins, losses: map.losses, wlr: `${wlr.toString().split('.')[1]}%`, name: map.name });
+            let wlr;
+
+            if (map.wins && map.losses) wlr = map.wins / (map.wins + map.losses);
+            else if (map.wins && !map.losses) wlr = '0.100';
+            else if (!map.wins && map.losses) wlr = '0.0';
+            else wlr = 'xx.xx';
+
+            wlr = wlr.toString().split('.')[1];
+            if(wlr.length == 1 && wlr != '0') wlr = wlr+'0';
+            if(wlr == '0') wlr = ' 0';
+
+            list.push({ wins: map.wins, losses: map.losses, battles: map.wins + map.losses, wlr: `${wlr}%`, name: map.name });
+
             total.wins += map.wins;
             total.losses += map.losses;
         };
         if(total.wins && total.losses) total.wlr = Math.round((total.wins / (total.wins + total.losses)) * 100) / 100;
         else if (total.wins && !total.losses) total.wlr = '0.100';
-        else if (!total.wins && total.losses) total.wlr = '0.00';
+        else if (!total.wins && total.losses) total.wlr = '0.0';
         else total.wlr = 'xx.xx';
-        total.wlr = total.wlr.toString().split('.');
-        total.wlr = `${total.wlr[1]}%`;
+
+        total.wlr = total.wlr.toString().split('.')[1];
+        if (total.wlr.length == 1 && total.wlr != '0') total.wlr = total.wlr + '0';
+        if (total.wlr == '0') total.wlr = ' 0';
+
+        total.wlr = `${total.wlr}%`;
 
         list.sort((b, a) => a.wlr.localeCompare(b.wlr) || a.name.localeCompare(b.name));
 
@@ -186,10 +201,10 @@ let CB_COLLECTED_AT_DUTAION = Date.now();
         let postList = [];
         for(let x = 0; x < list.length; x++){
             let listItem = list[x];
-            postList.push(`{ wins: ${listItem.wins}, losses: ${listItem.losses}, wlr: ${listItem.wlr}, name: ${listItem.name} }`);
+            postList.push(`{ wins: ${listItem.wins}, losses: ${listItem.losses}, battles: ${listItem.battles}, wlr: ${listItem.wlr}, name: ${listItem.name} }`);
         };
 
-        postList.push(`\n{ wins: ${total.wins}, losses: ${total.losses}, wlr: ${total.wlr} }`);
+        postList.push(`\n{ wins: ${total.wins}, losses: ${total.losses}, battles: ${total.wins + total.losses}, wlr: ${total.wlr} }`);
         await ch.send(postList.join("\n"), {code:'js'});
         await ch.send(await createResultsChart(results[2].list, 'Alpha and Bravo'));
     };
