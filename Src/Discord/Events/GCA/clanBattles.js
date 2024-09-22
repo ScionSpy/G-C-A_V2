@@ -21,7 +21,7 @@ module.exports = async function (_, bot, type) {
 
 
 async function callToArms(bot) {
-    let ch_clanBattles = await bot.channels.cache.get('1152409627795922944'); //#clan-battles-lobby
+    let ch_clanBattles = await bot.channels.cache.get('1126377466647294016'); //#clan-battles-lobby
 
     ch_clanBattles.send(`<@&1126377465741324435>, <@&1126377465741324434>\n> :crossed_swords: Clan Battles start in 30 Minutes! :crossed_swords: \n\n Remember **do NOT Ready** if you're going to be in the armoury!!\n You WILL get stuck on the laoding screen!!`);
 
@@ -32,7 +32,7 @@ async function callToArms(bot) {
 };
 
 async function callToArms_Extra(bot) {
-    let ch_clanBattles = await bot.channels.cache.get('1152409627795922944'); //#clan-battles-lobby
+    let ch_clanBattles = await bot.channels.cache.get('1126377466647294016'); //#clan-battles-lobby
 
     let ch_ReadyLounge = await bot.channels.cache.get('1126377466647294017'); //#Ready-Lounge
     let ch_divOne = await bot.channels.cache.get('1126377466647294018'); //#divison 1
@@ -173,7 +173,10 @@ let CB_COLLECTED_AT_DUTAION = Date.now();
             total.wins += map.wins;
             total.losses += map.losses;
         };
-        total.wlr = Math.round((total.wins / (total.wins + total.losses)) * 100) / 100;
+        if(total.wins && total.losses) total.wlr = Math.round((total.wins / (total.wins + total.losses)) * 100) / 100;
+        else if (total.wins && !total.losses) total.wlr = '0.100';
+        else if (!total.wins && total.losses) total.wlr = '0.00';
+        else total.wlr = 'xx.xx';
         total.wlr = total.wlr.toString().split('.');
         total.wlr = `${total.wlr[1]}%`;
 
