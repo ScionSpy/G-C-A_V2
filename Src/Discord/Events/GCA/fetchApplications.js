@@ -85,10 +85,10 @@ module.exports = async function (bot) {
         let result = results[x];
         console.log(result)
 
-        let joinedAt = Utils.getTimeStamp(new Date(result.joined_at));
-        let lastBattle = Utils.getTimeStamp(new Date(result.last_battle));
-        let cooldown = Utils.getTimeStamp(new Date(result.cooldown_expires));
-        let expiresAt = Utils.getTimeStamp(new Date(result.inviteExpiresAt));
+        let joinedAt = Utils.getTimeStamp({ Date: new Date(result.joined_at) });
+        let lastBattle = Utils.getTimeStamp({ Date: new Date(result.last_battle) });
+        let cooldown = Utils.getTimeStamp({ Date: new Date(result.cooldown_expires) });
+        let expiresAt = Utils.getTimeStamp({ Date: new Date(result.inviteExpiresAt) });
 
 
         let embed = new MessageEmbed();
