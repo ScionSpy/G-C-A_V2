@@ -15,7 +15,7 @@ module.exports = class DiscordPlayer extends Player {
     constructor(Data, bot){
         if (!bot || typeof bot != "object") throw new Error(`Database.DiscordPlayer(Data, bot); 'bot' must be defined as a Discord Client instance! `);
         if (!Data.id && !Data.name && !Data.discord_id) throw new Error(`Database.DiscordPlayer(Data, bot); Player requires an Data.id or Data.name or Data.discord_id to load!`);
-        super(Data);
+        super(Data, bot);
 
         this.#bot = bot;
         this.needsLoading = true;
@@ -47,26 +47,68 @@ module.exports = class DiscordPlayer extends Player {
         return this.#guildMember;
     };
 
-    async addRole(role_id, reason){
-        if (!this.#guildMember.manageable) return this.#cannotEdit({action:'addRole', role_id, reason});
-        let role = await this.#guildMember.guild.roles.cache.get(role_id);
+    /**
+     * Adds the provided {role_ids} from the player.
+     * @param {String[]} role_ids
+     * @param {String} reason
+     * @returns {Promise<import('discord.js').GuildMember>}
+     */
+    async addRoles(role_ids, reason){
+        if (!this.#guildMember.manageable) return this.#cannotEdit({ action: 'addRole', role_ids, reason });
+
+        let roles = [];
+        for (let x = 0; x < role_ids.length; x++) {
+            let role = await this.#guildMember.guild.roles.cache.get(role_ids[x]);
+            roles.push(role);
+        };
+
         try{
-            let status = await this.#guildMember.roles.add(role, reason);
+            let status = await this.#guildMember.roles.add(roles, reason);
             return status;
         }catch(err){
             throw new Error(`Database.DiscordPlayer.addRole(); Error! ${err}`);
         };
     };
 
-    async removeRole(role_id, reason) {
-        if (!this.#guildMember.manageable) return this.#cannotEdit({ action: 'removeRole', role_id, reason });
-        let role = await this.#guildMember.guild.roles.cache.get(role_id);
+    /**
+     * Removes the provided {role_ids} from the player.
+     * @param {String[]} role_ids
+     * @param {String} reason
+     * @returns {Promise<import('discord.js').GuildMember>}
+     */
+    async removeRoles(role_ids, reason) {
+        if (!this.#guildMember.manageable) return this.#cannotEdit({ action: 'removeRole', role_ids, reason });
+
+        let roles = [];
+        for(let x = 0; x < role_ids.length; x++){
+            let role = await this.#guildMember.guild.roles.cache.get(role_ids[x]);
+            roles.push(role);
+        };
+
         try {
-            let status = await this.#guildMember.roles.remove(role, reason);
+            let status = await this.#guildMember.roles.remove(roles, reason);
             return status;
         } catch (err) {
             throw new Error(`Database.DiscordPlayer.removeRole(); Error! ${err}`);
         };
+    };
+
+    /**
+     * Removes all clan rank from this user.
+     * @returns {Promise<import('discord.js').GuildMember>}
+     */
+    async removeMemberRoles(){
+        let pos = this.#bot.RanksIndex[this.clan.rank];
+
+        let memberRoles = [];
+        for(let x = 0; x < pos; x++){
+            let discRoleID = this.#bot.Ranks[x].id;
+            if(!discRoleID) continue;
+
+            memberRoles.push(discRoleID);
+        };
+
+        return await this.removeRoles(memberRoles);
     };
 
     async editNickname(name, reason) {
