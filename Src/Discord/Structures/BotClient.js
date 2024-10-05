@@ -3,14 +3,25 @@ const {
     Collection
 } = require("discord.js");
 const path = require("path");
-const { recursiveReadDirSync } = require("../Helpers/Utils");
+const { recursiveReadDirSync } = require("../Helpers/Utils.js");
 const Clans = require("../../Database/Schemas/index.js").Clans;
 const { clan_id } = require('../../WebAPI/apiConfig.js').Wargaming;
+const { Player, DiscordPlayer } = require('../../Database/Schemas/index.js').Players;
 
-const { PlayerManager } = require('../Helpers/Managers');
+const { PlayerManager } = require('../Helpers/Managers/index.js');
 
 
-module.exports = class BotClient extends Client {
+
+/**
+ * Description placeholder
+ *
+ * @class BotClient
+ * @typedef {BotClient}
+ * @extends {Client}
+ */
+class BotClient extends Client {
+
+
     constructor(){
         super({
             disableMentions: 'everyone',
@@ -36,11 +47,30 @@ module.exports = class BotClient extends Client {
         this.API = {
             WoWs: require('../../WebAPI/Wargaming/index.js')
         };
-        let clan = new Clans.Clan({ id: clan_id });
-        this.Clan = clan;//._Load();
 
-        //this.Players = new PlayerManager(this);
+        this.Ranks = [];
+        this.RanksIndex = new Collection();
+
+        let clan = new Clans.Clan({ id: clan_id });
+        this.Clan = clan;
+
+        this.Clans = [];
+        this.ClansIndex = new Collection();
+
+        /**
+         * Array of Player profiles within game.
+         * @type {Array<Player> | Array<DiscordPlayer}
+         */
         this.Players = [];
+
+        /**
+         * Collection of Player Array Indexes within the {Players} array.
+         *
+         * @type {Collection}
+         * @example
+         * let index = PlayersIndex.get("ShadowSpyy"); // -> int
+         * let player = Players[index]; // -> { Player | DiscordPlayer }
+         */
         this.PlayersIndex = new Collection();
     };
 
@@ -178,9 +208,11 @@ module.exports = class BotClient extends Client {
 
 
 /**
+ * Description placeholder
  *
  * @param {Array} array
- * @param {Number} itemsPerLine MAX 5
+ * @param {number} itemsPerLine MAX = 5
+ * @returns {Array<{count:Number, place:Number}>}
  */
 function prettyArrays(array, itemsPerLine){
     let newArray = [];
@@ -204,3 +236,5 @@ function prettyArrays(array, itemsPerLine){
 
     return newArray;
 };
+
+module.exports = BotClient;
