@@ -7,7 +7,7 @@ const Season = require('../../../Modules/ClanBattles/config').Season;
 module.exports = async function (_, bot, type) {
     if (!type){
         //console.log(`Event: GCA_clanBattles !type.`);
-        if (bot == 'callToArms' || 'callToArms_extra' || 'results') {
+        if (bot == 'callToArms' || 'callToArms_extra' || 'results', 'wlr') {
             //console.log(`Event: GCA_clanBattles !type (${type}). bot == '${bot}', setting type to bot.`);
             type = bot;
             bot = _;
@@ -17,6 +17,7 @@ module.exports = async function (_, bot, type) {
     if (type == 'callToArms') return callToArms(bot);
     else if (type == 'callToArms_extra') return callToArms_Extra(bot);
     else if (type === "results") return battleResults(bot);
+    else if (type === "wlr") return battleResults(bot, true);
 };
 
 
@@ -110,17 +111,23 @@ async function formResults(stats, div, getMaps){
 };
 
 
-
-async function battleResults(bot){
+let calledAt;
+async function battleResults(bot, onlyWLR = false){
+    if (!onlyWLR){
+        if ((Date.now() - 1000*60*60) < calledAt) return;
+        else calledAt = Date.now();
+    };
+    
 let CB_REVIEW_DUTAION = Date.now();
-    let alpha = await ClanBattles.fetchBattles(1);
-    let bravo = await ClanBattles.fetchBattles(2);
+
+    let alpha = await ClanBattles.fetchBattles(1, onlyWLR);
+    let bravo = await ClanBattles.fetchBattles(2, onlyWLR);
 let CB_COLLECTED_AT_DUTAION = Date.now();
     let ch = bot.channels.cache.get('1152409627795922944'); //#clan-battles-lobby // 1152409627795922944 = cb-results ; //1137246476188274750 = 'shadow-spam
     let graphs = [];
     let stats = {};
 
-    if (alpha.Embeds.length > 0) {
+    if (!onlyWLR && alpha.Embeds.length > 0) {
         for (let x = 0; x < alpha.Embeds.length; x++) {
             await ch.send(alpha.Embeds[x]);
         };
@@ -133,7 +140,7 @@ let CB_COLLECTED_AT_DUTAION = Date.now();
         await ch.send(graphs.alpha);
     };
 
-    if (bravo.Embeds.length > 0) {
+    if (!onlyWLR && bravo.Embeds.length > 0) {
         for (let x = 0; x < bravo.Embeds.length; x++) {
             await ch.send(bravo.Embeds[x]);
         };
@@ -146,7 +153,7 @@ let CB_COLLECTED_AT_DUTAION = Date.now();
         await ch.send(graphs.bravo);
     };
 
-    if(alpha.Embeds.length > 0 && bravo.Embeds.length > 0){
+    if (!onlyWLR && alpha.Embeds.length > 0 && bravo.Embeds.length > 0){
         await ch.send(`Tonights Stats; Alpha and Bravo Divs:\`\`\`js\n\ \ Wins : ${stats.alpha.wins + stats.bravo.wins}\nLosses : ${stats.alpha.losses + stats.bravo.losses}\`\`\``);
 
         if(results.length > 2) results = [{ name: "wins", wins: 0 }, { name: "losses", losses: 0 }, {name: "maps", list: []}];
@@ -170,7 +177,7 @@ let CB_COLLECTED_AT_DUTAION = Date.now();
             let map = results[2].list[x];
             let wlr;
 
-            if (map.wins && map.losses) wlr = map.wins / (map.wins + map.losses);
+            if (map.wins && map.losses) wlr = Math.round(map.wins / (map.wins + map.losses) *100) /100;
             else if (map.wins && !map.losses) wlr = '0.100';
             else if (!map.wins && map.losses) wlr = '0.0';
             else wlr = 'xx.xx';
@@ -206,7 +213,7 @@ let CB_COLLECTED_AT_DUTAION = Date.now();
 
         postList.push(`\n{ wins: ${total.wins}, losses: ${total.losses}, battles: ${total.wins + total.losses}, wlr: ${total.wlr} }`);
         await ch.send(postList.join("\n"), {code:'js'});
-        await ch.send(await createResultsChart(results[2].list, 'Alpha and Bravo'));
+        if (!onlyWLR) await ch.send(await createResultsChart(results[2].list, 'Alpha and Bravo'));
     };
 };
 

@@ -167,7 +167,7 @@ function resultsHas2(title) {
  * * 2 = "Bravo"
  * @returns
  */
-async function fetchBattles(type) {
+async function fetchBattles(type, onlyWLR) {
     let clanBattles = await Clans.getClanBattles(type);
     //this.existingClanBattleIDs = this.#bot // pull saved clan battles.
     // pull all battle ID's for this season.
@@ -209,6 +209,7 @@ async function fetchBattles(type) {
 
         if (!clanList.includes(player.clan_id)) clanList.push(player.clan_id);
     };
+    console.log(`Pulled ${clanBattles.length} ClanBattles.`);
 
     for (let x = 0; x < clanBattles.length; x++) {
         let battle = new Battle(clanBattles[x]);
@@ -217,7 +218,7 @@ async function fetchBattles(type) {
         let battletime = Date.parse(battle.finished_at);
         if ((Now - battletime) > cutOff) {
             lastBattle = (Now - battletime) / 1000 / 60 / 60 / 19 //Default
-            if(!Config.getAllBattles) break; //Comment this line to gather "ALL" battles.
+            if(!Config.getAllBattles && !onlyWLR) break; //Comment this line to gather "ALL" battles.
         };
 
         battles[battle.arena_id] = battle;
