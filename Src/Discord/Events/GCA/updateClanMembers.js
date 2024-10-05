@@ -60,17 +60,23 @@ const { Ranks } = require('../../../Constants.js');
  */
 let results = {};
 
-
+let newPlayer = [];
 /**
  *
  * @param {import('../../../WebAPI/Wargaming/Calls/ClanData.js').Clan_Member} member Member joining the Clan.
  * @param {import('../../../WebAPI/Wargaming/Calls/ClanData.js').InviteData} inviteData invite the member joined with.
  */
-async function addPlayer(member, inviteData) {
-    let player = new Player({ id: member.account_id });
+async function addPlayer(member, inviteData, bot) {
+    if(newPlayer.includes(member.account_name)) return;
+    newPlayer.push(member.account_name);
+
+    let player = new Player({ id: member.account_id }, bot);
     player = await player.load();
-    if(!player.name) player = await player.create(member, inviteData);
-    else await player.toggleClanMember(true, member.role);
+
+    //if(!player.name) player = await player.create(member, inviteData);
+    //else await player.toggleClanMember(true, member.role);
+
+    //if(player.discord_id) // add roles
 
     let oldMember = "";
     if(player?.stats?.left) oldMember = {
@@ -91,16 +97,21 @@ async function addPlayer(member, inviteData) {
     results.added.push(data);
 };
 
+let oldPlayer = [];
+
 /**
- *
+ * @param {import('../../Structures/BotClient.js')} bot;
  * @param {*} member DB Member
  */
 async function removePlayer(bot, member) {
-    let player = new Player({ id: member.id });
-    player = await player.load();
+    if (oldPlayer.includes(member.account_name)) return;
+    else oldPlayer.push(member.account_name);
+
+    let player = bot.Players[bot.PlayersIndex.get(member.id)];
     player.toggleClanMember(false);
+
     //Remove roles
-    //if (player.discord_id) await removeMemberRoles();
+    if (player.discord_id) await player.RemoveMemberRoles();
 
     results.removed.push({
         id: member.id,
@@ -111,12 +122,16 @@ async function removePlayer(bot, member) {
     });
 };
 
+let updatedPlayer = [];
+
 /**
  *
  * @param {*} mem
  * @param {import('../../../WebAPI/Wargaming/Calls/ClanData.js').Clan_Member} member
  */
 async function updatePlayer(mem, member) {
+    if (updatedPlayer.includes(member.account_name)) return;
+    updatedPlayer.push(member.account_name);
     let player = new Player({ id: member.account_id });
     player = await player.load();
     player.setName(member.account_name);
@@ -168,9 +183,11 @@ async function updateClanMembers(bot) {
                     new_role: member.role
                 };
                 if (Ranks.Values[mem.clan_role] < Ranks.Values[member.role]) { //Member was promoted!
+                    // ToDo: AddRoles()
                     results.promote.push(update);
 
                 } else { // Member was demoted...
+                    // ToDo: RemoveRoles()
                     results.demote.push(update);
 
                 };
@@ -189,8 +206,18 @@ async function updateClanMembers(bot) {
         let member_id = clan.members_ids[x];
         if (!checked_ids.includes(member_id)) { // Member joined the clan since last check.
             let member = clan.members[member_id];
+            let application = await bot.Clan.applications.getSavedApplications();
             let invite = await bot.Clan.invites.getInviteFor({name:member.account_name});
-            await addPlayer(member, invite);
+
+            let data;
+            if (application && invite){
+                if(application.created_at > invite.created_at) data = application;
+                else data = invite;
+            } else if (application) data = application
+            else if (invite) data = invite;
+            else throw new Error(`EVENT ERROR: Event.updateClanMembers(); Member Joined by: Unknown, !application; !invite.`);
+
+            await addPlayer(member, data, bot);
         };
     };
 
@@ -216,10 +243,14 @@ module.exports = async (bot) => {
     let msg = `__**Member Changes**__`;
     let adminMsg = `__**Member Changes**__`;
 
+
+    let note;
+
     if(results.added.length > 0) results.added.forEach(result => {
         if(!result.oldMember){
             msg = `${msg}\n> :new: ${result.name} has joined the clan!`
             adminMsg = `${adminMsg}\n> :new: ${result.name} has joined the clan! \`[ Method: ${result.inviter} ]\``;
+            note = note + `NEW PLAYER\nJoined at: <t:${result.joined}:d>T<t:${result.joined}:t>\nInvited By: ${result.inviter}\n\n`;
         }else{
             msg = `${msg}\n> :new: ${result.name} has rejoined the clan after ${Math.floor(result.oldMember.left_at /1000/60/60/24)} days.`
             adminMsg = `${adminMsg}\n> :new: ${result.name} has rejoined the clan after ${Math.floor(result.oldMember.left_at / 1000 / 60 / 60 / 24)} days. \`[ Method: ${result.inviter} ]\`\n> Last Rank Held : ${Ranks[result.oldMember.last_rank]}\n> Left ${Math.round(result.oldMember.left_at / 1000 / 60 / 60 / 24)} days ago. | With G-C-A for a total of ${Math.round(result.oldMember.duration / 1000 / 60 / 60 / 24)} days.`;
@@ -247,11 +278,14 @@ module.exports = async (bot) => {
     if (results.update.length > 0) results.update.forEach(result => {
         msg = `${msg}\n> :gear: ${Ranks.Shorts[result.rank]} ${result.old_name} has been updated!`
         adminMsg = `${adminMsg}\n> :gear: ${Ranks.Shorts[result.rank]} ${result.old_name} has updated their name! [  New Name: ${result.new_name}  ]`
+        note = note + `NAME CHANGED\n${Ranks.Shorts[result.rank]}${result.old_name} updated their name to ${result.old_name}`;
     });
 
     //ToDO: "Get Channel Function" in Helpers.
+    let playerUpdates = await bot.channels.cache.get('1222751535159578717');
     bot.channels.cache.get('1136014419567067166').send(msg);
-    if (adminMsg !== '__**Member Changes**__') bot.channels.cache.get('1222751535159578717').send(adminMsg);
+    if (adminMsg !== '__**Member Changes**__') playerUpdates.send(adminMsg);
+    if (note) playerUpdates.send(`<@213250789823610880>,\n`+note);
     bot.channels.cache.get('1168784020109266954').send(JSON.stringify(results, null, 4), {code:'js', split:1});
     bot.Clan = await bot.Clan._Load();
 };

@@ -102,7 +102,7 @@ module.exports = {
      * @returns {Array<PlayerDetails>}
      */
     getDetails: async function getPlayerDetails(query) {
-        if (typeof query !== "string" || query.length < 10) throw new Error(`WargamingAPI.getPlayerDetails(query)\n  'query' must be a string of clan ID's! got ${typeof query} : length(${query.length}) !== 10\n`);
+        if (typeof query !== "string" || query.length < 10) throw new Error(`WargamingAPI.getPlayerDetails(query)\n  'query' must be a string of clan ID's! got ${typeof query} : ${query} : length(${query.length}) !== 10\n`);
 
         let queryData = [[]]
         if (query.includes(',')) queryData = defineQuery(query, 100);
