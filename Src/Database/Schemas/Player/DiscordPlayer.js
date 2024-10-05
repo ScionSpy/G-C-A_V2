@@ -30,8 +30,17 @@ module.exports = class DiscordPlayer extends Player {
             this.#guildMember = member;
 
         }catch(err){
-            this.#guildMember = null;
-            throw new Error(`Database.DiscordPlayer.load(); Error! ${err}`);
+            if (err.message === "Unknown Member") {
+                let player = new Player(this, this.#bot);
+                player = await player.load();
+                return player;
+
+            } else {
+                console.log(JSON.stringify(err, null, 4));
+
+                this.#guildMember = null;
+                throw new Error(`Database.DiscordPlayer.load(); Error! ${err}`);
+            };
         };
 
         delete this.needsLoading;
