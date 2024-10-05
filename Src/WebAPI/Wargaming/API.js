@@ -1,4 +1,3 @@
-const { description } = require('../../Discord/Structures/Command');
 const WebAPI = require('../index');
 const config = require('../apiConfig').Wargaming;
 const URI = config.path + '{PATH}/?application_id=' + config.app_id

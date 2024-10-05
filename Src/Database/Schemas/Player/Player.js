@@ -7,10 +7,16 @@ const Database = require('../../core.js');
 
 module.exports = class Player extends Database {
 
-    constructor(Data){
+
+    #bot;
+
+    constructor(Data, client){
         super();
 
-        if (!Data.id && !Data.name && !Data.discord_id) throw new Error(`Database.Player(Data); 'data' requires data.id or data.name or data.discord_id to load!`);
+        if (!Data.id && !Data.name && !Data.discord_id) throw new Error(`Database.Player(Data, client); 'data' requires data.id or data.name or data.discord_id to load!`);
+        if (!client) throw new Error(`Database.Player(Data, client); 'client' is required. got ${typeof client}`);
+
+        this.#bot = client;
 
         this.id = Data.id || null;
         this.name = Data.name || null;
@@ -182,15 +188,15 @@ module.exports = class Player extends Database {
 
 
     isNonComissioned() {
-        if (this.clan && this.clan.id == Constants.GCA.id && Constants.Ranks.Values[this.clan.rank] < 3) return true;
+        if (this.clan && this.clan.id == Constants.GCA.id && this.#bot.Ranks[this.#bot.RanksIndex.get(this.clan.rank)].rank < 3) return true;
         else return false;
     };
 
 
     isRecruiter(exact) {
         if (this.clan && this.clan.id == Constants.GCA.id) {
-            if (!exact && Constants.Ranks.Values[this.clan.rank] > 3) return true;
-            else if (exact && Constants.Ranks.Values[this.clan.rank] == 3) return true;
+            if (!exact && this.#bot.Ranks[this.#bot.RanksIndex.get(this.clan.rank)].rank > 3) return true;
+            else if (exact && this.#bot.Ranks[this.#bot.RanksIndex.get(this.clan.rank)].rank == 3) return true;
             else false;
         } else return false;
     };
@@ -198,15 +204,15 @@ module.exports = class Player extends Database {
 
     isXO(exact) {
         if (this.clan && this.clan.id == Constants.GCA.id){
-            if (!exact && Constants.Ranks.Values[this.clan.rank] > 4) return true;
-            else if (exact && Constants.Ranks.Values[this.clan.rank] == 4) return true;
+            if (!exact && this.#bot.Ranks[this.#bot.RanksIndex.get(this.clan.rank)].rank > 4) return true;
+            else if (exact && this.#bot.Ranks[this.#bot.RanksIndex.get(this.clan.rank)].rank == 4) return true;
             else false;
         } else return false;
     };
 
 
     isCO() {
-        if (this.clan && this.clan.id == Constants.GCA.id && Constants.Ranks.Values[this.clan.rank] == 5) return true;
+        if (this.clan && this.clan.id == Constants.GCA.id && this.#bot.Ranks[this.#bot.RanksIndex.get(this.clan.rank)].rank == 5) return true;
         else return false;
     };
 

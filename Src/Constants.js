@@ -1,3 +1,5 @@
+const { Collection } = require("discord.js");
+
 module.exports = {
     GCA: {
         id: "1000101905",
@@ -34,4 +36,13 @@ module.exports = {
             "null": -1,
         },
     },
+
+    _Ranks: [
+        { discord_id: '1126377465741324435', rank: 0, short: '(M)', key: 'private', name: 'Midshipman' },
+        { discord_id: '1126377465741324435', rank: 1, short: '(L)', key: 'officer', name: 'Line Officer' },
+        { discord_id: '1126377465741324435', rank: 2, short: '(C)', key: 'commissioned_officer', name: 'Commissioned Officer' },
+        { discord_id: '1126377465741324436', rank: 3, short: '(R)', key: 'recruitment_officer', name: 'Recruiter' },
+        { discord_id: '1126377465741324437', rank: 4, short: '(XO)', key: 'executive_officer', name: 'Deputy Commander' },
+        { discord_id: '1126377465741324438', rank: 5, short: '(CO)', key: 'commander', name: 'Commander' },
+    ]
 };

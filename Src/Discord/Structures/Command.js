@@ -28,6 +28,7 @@
  * @property {SubCommand[]} [subcommands=[]] - List of subcommands
  * @property {number} cooldown - The command cooldown in seconds
  * @property {CommandCategory} category - The category this command belongs to
+ * @property {number} auth - The minimum required rank to execute this command.
  * @property {import('discord.js').PermissionResolvable[]} [botPermissions] - Permissions required by the client to use the command.
  * @property {import('discord.js').PermissionResolvable[]} [userPermissions] - Permissions required by the user to use the command
  * @property {Validation[]} [validations] - List of validations to be run before the command is executed
@@ -50,6 +51,7 @@ module.exports = {
     cooldown: 0,
     //isPremium: false,
     category: "NONE",
+    auth: 9,
     //botPermissions: [],
     //userPermissions: [],
     //validations: [],

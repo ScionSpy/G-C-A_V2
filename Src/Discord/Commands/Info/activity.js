@@ -3,7 +3,6 @@ const { MessageEmbed } = require('discord.js');
 const DB = require('../../../Database/index');
 const Player = require('../../../Database/Schemas/Player/Player');
 const Constants = require('../../../Constants');
-/** @type {import('../../Structures/BotClient')}*/
 let bot;
 
 
@@ -174,7 +173,7 @@ module.exports = {
         if (activity[activity.length - 1].date === "ACTIVITY_CONTROL") TIME = TIME.replace('{RANGE2}', activity[activity.length - 2].date);
         else TIME = TIME.replace('{RANGE2}', activity[activity.length - 1].date);
 
-        return { limit, totalBattles, chart: await createChart({ labels: hours, dataset: Dataset }, TIME, `${Constants.Ranks.Shorts[player.clan.rank]} ${player.name}\n{DATE_RANGE}`) };
+        return { limit, totalBattles, chart: await createChart({ labels: hours, dataset: Dataset }, TIME, `${bot.Ranks[bot.RanksIndex.get(player.clan.rank)].short} ${player.name}\n{DATE_RANGE}`) };
     },
 
     async getClanActivity(limit = 48){
@@ -253,7 +252,6 @@ module.exports = {
                 try{
                     playerID = Number(playerID);
                     if(!bot.Players[bot.PlayersIndex.get(playerID)]) continue;
-
 
                     totalBattles += activityData.members[playerID].length;
 
