@@ -32,6 +32,12 @@ async function callToArms(bot) {
     }, 1000 *60 *25);*/
 };
 
+let ignoredIDs = [
+    '268520118869295105', // Satan's Girl
+    '717440390021644289', // Perfect Angel. ( xRO4DK1LLx's friend )
+    '835971093847998475', // rBlades Mobile account.
+    '1294490882896035875', // Destarah's "Dup" act.
+];
 async function callToArms_Extra(bot) {
     let ch_clanBattles = await bot.channels.cache.get('1126377466647294016'); //#clan-battles-lobby
 
@@ -39,8 +45,16 @@ async function callToArms_Extra(bot) {
     let ch_divOne = await bot.channels.cache.get('1126377466647294018'); //#divison 1
     let ch_divTwo = await bot.channels.cache.get('1126377466647294019'); //#diviion 2
 
+    let memberCount = 0;
+    memberCount += ch_ReadyLounge.members.size + ch_divOne.members.size + ch_divTwo.members.size;
+
+    for (let x = 0; x < ignoredIDs.length; x++){
+        let ignoredID = ignoredIDs[x];
+        if (ch_ReadyLounge.members.get(ignoredID) || ch_divOne.members.get(ignoredID) || ch_divTwo.members.get(ignoredID)) memberCount -= 1;
+    };
+
     if (
-        ch_ReadyLounge.members.size >= 7 || ch_divOne.members.size >= 7 || ch_divTwo.members.size >= 7
+        memberCount >= 7
     ) return console.log(`Event: GCA_clanBattles.callToArms(); Event Fired, but there was already a full team in VC.`);
 
     ch_clanBattles.send(`<@&1126377465741324435>, <@&1126377465741324434>\n> :crossed_swords: Clan Battles start in 5 Minutes! :crossed_swords:\n  We still need ${7 - ch_ReadyLounge.members.size} members to start a division!\n*Tʜɪs ᴛᴇxᴛ ɪs ᴏɴʟʏ ᴛʀᴀᴄᴋɪɴɢ "Rᴇᴀᴅʏ Lᴏᴜɴɢᴇ" ᴅɪsʀᴇɢᴀʀᴅ ɪғ ᴛʜᴇʀᴇ's ᴀ ғᴜʟʟ ᴅɪᴠɪsɪᴏɴ sᴇᴛ-ᴜᴘ ᴀʟʀᴇᴀᴅʏ!*`);
@@ -117,7 +131,7 @@ async function battleResults(bot, onlyWLR = false){
         if ((Date.now() - 1000*60*60) < calledAt) return;
         else calledAt = Date.now();
     };
-    
+
 let CB_REVIEW_DUTAION = Date.now();
 
     let alpha = await ClanBattles.fetchBattles(1, onlyWLR);
