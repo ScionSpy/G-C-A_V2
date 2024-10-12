@@ -108,7 +108,7 @@ module.exports = {
         if (query.includes(',')) queryData = defineQuery(query, 100);
         else queryData[0][0] = query; // "startswith"
         let players = [];
-
+        //console.log(queryData.length)
         for (let x = 0; x < queryData.length; x++) {
             for (let y = 0; y < queryData[x].length; y++) {
                 let q = queryData[x][y];
@@ -120,7 +120,7 @@ module.exports = {
             if (results.status === "error") throw new Error(`WargamingAPI.getPlayerDetails(query='${results.error.value}') -> ` + await API.handelApiError(results.error, 'account/info'));
             else players = players.concat(results.data);
         };
-
+        //console.log(players.length);
         return players;
     },
 

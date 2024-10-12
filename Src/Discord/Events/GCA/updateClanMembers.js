@@ -63,18 +63,19 @@ let results = {};
 let newPlayer = [];
 /**
  *
+ * @param {import('../../Structures/BotClient.js')} bot;
  * @param {import('../../../WebAPI/Wargaming/Calls/ClanData.js').Clan_Member} member Member joining the Clan.
  * @param {import('../../../WebAPI/Wargaming/Calls/ClanData.js').InviteData} inviteData invite the member joined with.
  */
-async function addPlayer(member, inviteData, bot) {
+async function addPlayer(bot, member, inviteData, bot) {
     if(newPlayer.includes(member.account_name)) return;
     newPlayer.push(member.account_name);
 
     let player = new Player({ id: member.account_id }, bot);
     player = await player.load();
 
-    //if(!player.name) player = await player.create(member, inviteData);
-    //else await player.toggleClanMember(true, member.role);
+    if(!player.name) player = await player.create(member, inviteData);
+    else await player.toggleClanMember(true, member.role);
 
     //if(player.discord_id) // add roles
 
@@ -90,7 +91,7 @@ async function addPlayer(member, inviteData, bot) {
         name: member.account_name,
         rank: member.role,
         joined: member.joined_at * 1000,
-        inviter: inviteData ? `${inviteData.sender.id} / ${inviteData.sender.name}` : 'Application',
+        inviter: inviteData.sender ? `${inviteData.sender.id} / ${inviteData.sender.name}` : inviteData === 'untracked' ? inviteData : 'Application',
     };
     if(oldMember) data.oldMember = oldMember;
 
@@ -111,7 +112,7 @@ async function removePlayer(bot, member) {
     player.toggleClanMember(false);
 
     //Remove roles
-    if (player.discord_id) await player.RemoveMemberRoles();
+    //if (player.discord_id) await player.RemoveMemberRoles();
 
     results.removed.push({
         id: member.id,
@@ -126,13 +127,14 @@ let updatedPlayer = [];
 
 /**
  *
+ * @param {import('../../Structures/BotClient.js')} bot;
  * @param {*} mem
  * @param {import('../../../WebAPI/Wargaming/Calls/ClanData.js').Clan_Member} member
  */
-async function updatePlayer(mem, member) {
+async function updatePlayer(bot, mem, member) {
     if (updatedPlayer.includes(member.account_name)) return;
     updatedPlayer.push(member.account_name);
-    let player = new Player({ id: member.account_id });
+    let player = new Player({ id: member.account_id }, bot);
     player = await player.load();
     player.setName(member.account_name);
 
@@ -196,7 +198,7 @@ async function updateClanMembers(bot) {
             };
 
             if (mem.name !== member.account_name) { // Member changed their name
-                await updatePlayer(mem, member);
+                await updatePlayer(bot, mem, member);
             };
         };
         checked_ids.push(mem.id);
@@ -206,8 +208,8 @@ async function updateClanMembers(bot) {
         let member_id = clan.members_ids[x];
         if (!checked_ids.includes(member_id)) { // Member joined the clan since last check.
             let member = clan.members[member_id];
-            let application = await bot.Clan.applications.getSavedApplications();
-            let invite = await bot.Clan.invites.getInviteFor({name:member.account_name});
+            let application = await bot.Clan.getSavedApplications();
+            let invite = await bot.Clan.getInviteFor({name:member.account_name});
 
             let data;
             if (application && invite){
@@ -215,9 +217,9 @@ async function updateClanMembers(bot) {
                 else data = invite;
             } else if (application) data = application
             else if (invite) data = invite;
-            else throw new Error(`EVENT ERROR: Event.updateClanMembers(); Member Joined by: Unknown, !application; !invite.`);
+            else data = 'untracked'; //throw new Error(`EVENT ERROR: Event.updateClanMembers(); Member Joined by: Unknown, !application; !invite.`);
 
-            await addPlayer(member, data, bot);
+            await addPlayer(bot, member, data);
         };
     };
 
@@ -250,7 +252,7 @@ module.exports = async (bot) => {
         if(!result.oldMember){
             msg = `${msg}\n> :new: ${result.name} has joined the clan!`
             adminMsg = `${adminMsg}\n> :new: ${result.name} has joined the clan! \`[ Method: ${result.inviter} ]\``;
-            note = note + `NEW PLAYER\nJoined at: <t:${result.joined}:d>T<t:${result.joined}:t>\nInvited By: ${result.inviter}\n\n`;
+            note = `${note ? `${note} ` : ''}NEW PLAYER\nJoined at: <t:${result.joined}:d>T<t:${result.joined}:t>\nInvited By: ${result.inviter}\n\n`;
         }else{
             msg = `${msg}\n> :new: ${result.name} has rejoined the clan after ${Math.floor(result.oldMember.left_at /1000/60/60/24)} days.`
             adminMsg = `${adminMsg}\n> :new: ${result.name} has rejoined the clan after ${Math.floor(result.oldMember.left_at / 1000 / 60 / 60 / 24)} days. \`[ Method: ${result.inviter} ]\`\n> Last Rank Held : ${Ranks[result.oldMember.last_rank]}\n> Left ${Math.round(result.oldMember.left_at / 1000 / 60 / 60 / 24)} days ago. | With G-C-A for a total of ${Math.round(result.oldMember.duration / 1000 / 60 / 60 / 24)} days.`;

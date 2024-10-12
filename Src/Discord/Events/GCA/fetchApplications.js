@@ -9,6 +9,7 @@ const Util = require('../../../WebAPI/Utils');
 module.exports = async function (bot) {
     console.log(`Start Event.fetchApplications()`);
     let applications = await bot.Clan.getApplications();
+    if (applications.length > 0) console.log(applications);
 
     if (applications.length == 0) return console.log(`• End Event.fetchApplications()`);
     let dbApps = await bot.DB._Get("Applications", {}, {id:1, expires_at:1});
