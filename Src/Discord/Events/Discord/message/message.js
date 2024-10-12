@@ -1,8 +1,11 @@
 //const { automodHandler, statsHandler } = require("@src/handlers");
 const { commandHandler } = require('../../../Handlers');
 const config = require("../../../../config");
-const { getSettings } = require("../../../../Database/Schemas/Guild");
+const Guild = require("../../../../Database/Schemas/Guild");
 const DiscordPlayer = require('../../../../Database/Schemas/Player/DiscordPlayer');
+const { MessageEmbed } = require('discord.js');
+
+const cooldowns = {};
 
 /**
  * @param {import('../../../Structures').BotClient} client
@@ -10,9 +13,12 @@ const DiscordPlayer = require('../../../../Database/Schemas/Player/DiscordPlayer
  */
 module.exports = async (client, message) => {
     if (message.author.bot) return;
-    if (message.guild && message.guild.id !== config.SUPPORT_SERVER) return;
+    if (!message.guild) return;
 
-    const settings = await getSettings(message.guild);
+    if(!message.guild.settings){
+        let guildSettings = await new Guild(message.guild, client);
+        message.guild.settings = guildSettings;
+    };
 
     if(message.author.player === undefined){
         let index = client.PlayersIndex.get(message.author.id);
@@ -34,13 +40,60 @@ module.exports = async (client, message) => {
 
     //await awaitReadyState(message);
 
-    if (message.content && message.content.startsWith(settings.prefix)) {
-        const invoke = message.content.replace(`${settings.prefix}`, "").split(/\s+/)[0];
+    let prefixes = [config.DEFAULT_PREFIX, message.guild.settings.prefix];
+
+    let prefix;
+    for(let x = 0; x < prefixes.length; x++){
+        if(message.content.startsWith(prefixes[x])) prefix = prefixes[x];
+    };
+
+    if (message.content && prefix) {
+        const invoke = message.content.replace(`${message.guild.settings.prefix}`, "").split(/\s+/)[0];
         const cmd = client.getCommand(invoke);
 
         if (cmd) {
             isCommand = true;
-            commandHandler.handlePrefixCommand(message, cmd, settings);
+            commandHandler.handlePrefixCommand(message, cmd, message.guild.settings);
+        };
+    } else if (client.riftChannels.codeGiveAways.includes(message.channel.id) && !message.content.startsWith('..')) {
+        if ((Date.now() < cooldowns[message.author.id])) return message.reply(`You're currently on cooldown for another ${(cooldowns[message.author.id]-Date.now()) /1000} seconds.\n>  *This is done to prevent spamming multiple servers! Abuse of this feature may get you banned from it's use!*`).then(m => { m.delete({timeout: 15000}) });
+
+        try{
+            /** @type {import('../../../../Database/Schemas/Player/Player')} */
+            let player = client.Players[await client.PlayersIndex.get(message.author.id)];
+            let playerClan;
+            if (player && player?.clan.id) playerClan = await player.getClan();
+            /** @type {import('../../../../Database/Schemas/Clan/_Clan')} */
+            let clan = client.Clans[await client.ClansIndex.get(message.guild.id)];
+
+            let embed = new MessageEmbed()
+                .setColor("RANDOM")
+                .setTimestamp()
+                .setFooter(`${client.user.username} by [G-C-A] ShadowSpyy`)
+            if (clan && clan?.discord && clan.discord?.invite) embed.setDescription(`> [Server Invite](https://discord.gg/${clan.discord.invite})\n\n${message.content}\n`);
+            else embed.setDescription(`\n${message.content}\n`);
+
+            if (player) embed.setAuthor(`${player.clan ? `[${playerClan.tag}] ${client.Ranks[client.RanksIndex.get(player.clan.rank)].short} ` : ''}${player.name}`);
+            else embed.setAuthor(message.author.username, message.author.displayAvatarURL({dynamic:true}));
+
+            if (clan) embed.setTitle(`[${clan.tag}] ${clan.name}]`);
+            else embed.setTitle(`[Unaligned] (${message.guild.nameAcronym}) ${message.guild.name}`);
+
+            for (let x = 0; x < client.riftChannels.codeGiveAways.length; x++){
+                if (message.channel.id === client.riftChannels.codeGiveAways[x]) continue;
+                let ch = client.channels.cache.get(client.riftChannels.codeGiveAways[x]);
+                if (!ch){
+                    client.riftChannels.codeGiveAways = client.riftChannels.codeGiveAways.splice(x, 1);
+                    continue;
+                };
+
+                ch.send(embed);
+            };
+            cooldowns[message.author.id] = Date.now() + 15000;
+            message.react('✅');
+        } catch (err){
+            message.react('❌');
+            return message.reply(`There was an error sending to the other ${client.riftChannels.codeGiveAways.length} code giveaway channels!\n  <@${config.OWNER_IDS[0]}>,\n\`\`\`js\n${err.stack}\n\`\`\``, {split:1});
         };
     };
 

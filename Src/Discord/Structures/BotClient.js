@@ -1,12 +1,13 @@
 const {
     Client,
-    Collection
+    Collection,
+    MessageEmbed
 } = require("discord.js");
 const path = require("path");
 const { recursiveReadDirSync } = require("../Helpers/Utils.js");
-const Clans = require("../../Database/Schemas/index.js").Clans;
-const { clan_id } = require('../../WebAPI/apiConfig.js').Wargaming;
+const Clan = require("../../Database/Schemas/index.js").Clans.Clan;
 const { Player, DiscordPlayer } = require('../../Database/Schemas/index.js').Players;
+const { getTimeStamp } = require('../Helpers/Utils.js');
 
 const { PlayerManager } = require('../Helpers/Managers/index.js');
 
@@ -48,11 +49,13 @@ class BotClient extends Client {
             WoWs: require('../../WebAPI/Wargaming/index.js')
         };
 
+        this.supportServer;
+
         this.Ranks = [];
         this.RanksIndex = new Collection();
 
-        let clan = new Clans.Clan({ id: clan_id });
-        this.Clan = clan;
+        /** @type {Clan} clan*/
+        this.Clan;
 
         this.Clans = [];
         this.ClansIndex = new Collection();
@@ -72,6 +75,13 @@ class BotClient extends Client {
          * let player = Players[index]; // -> { Player | DiscordPlayer }
          */
         this.PlayersIndex = new Collection();
+
+
+        this.riftChannels = {
+            codeGiveAways: [],
+            mercs: [],
+            rift: [],
+        };
     };
 
     /**
@@ -203,6 +213,57 @@ class BotClient extends Client {
         console.log(cmds);
 
         console.log(`>> Loaded ${success + failed} commands. Success (${success}) Failed (${failed})\n`);
+    };
+
+
+
+    async #getCh(chID){
+        try {
+            let ch = this.supportServer.channels.cache.get(chID);
+            return ch;
+        } catch(err){
+            throw new Error(`BotClient.#getCh(chID = ${chID}); Error fetching channel from cache!\n\n${err.stack}`);
+        };
+    };
+
+
+    /**
+     * Bot joined a server.
+     * @param {import('discord.js').Guild} guild
+     */
+    async _postNewGuild(guild){
+        let ch = await this.#getCh('1293009453347635300');
+        let owner = await this.users.fetch(guild.ownerID);
+
+        let embed = new MessageEmbed()
+            .setColor("GREEN")
+            .setTitle("Server Joined")
+            .setAuthor(guild.name, guild.iconURL({dynamic:true}))
+            .setDescription(`\`\`\`js\n  Owner : ${owner.username} (${guild.ownerID})\nMembers : ${guild.memberCount}\nCreated : ${getTimeStamp(guild.createdTimestamp)}\`\`\``)
+            .setFooter(this.user.username, this.user.avatarURL({dynamic:true}))
+            .setTimestamp()
+
+        return await ch.send(embed);
+    };
+
+
+    /**
+     * Bot left a server.
+     * @param {import('discord.js').Guild} guild
+     */
+    async _postOldGuild(guild) {
+        let ch = await this.#getCh('1293009453347635300');
+        let owner = await this.users.fetch(guild.ownerID);
+
+        let embed = new MessageEmbed()
+            .setColor("RED")
+            .setTitle("Server Left")
+            .setAuthor(guild.name)
+            .setDescription(`\`\`\`js\n Owner : ${owner.username} (${guild.ownerID})\nJoined : ${getTimeStamp(guild.joinedTimestamp)} \`\`\``)
+            .setFooter(this.user.username, this.user.avatarURL({ dynamic: true }))
+            .setTimestamp()
+
+        return await ch.send(embed);
     };
 };
 
