@@ -144,7 +144,7 @@ class ClanBattle_Team {
         let stage = this.rating.struggle;
         struggle.type = stage.type == "promotion" ? `{Stage_Promotion_League_Title.Text}` : `Struggle to stay in the League.`;
         for(let x = 0; x<stage.progress.length; x++){
-            struggle.results[x] = stage.progress[x] ? "★ " : "✩ ";
+            struggle.results[x] = stage.progress[x] == 'victory' ? "★ " : "✩ ";
         };
 
         return struggle;
