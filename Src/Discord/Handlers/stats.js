@@ -38,24 +38,22 @@ module.exports = {
         const member = await newState.member.fetch().catch(() => { });
         if (!member || member.user.bot) return;
 
+        const statsDb = await getMemberStats(member.guild.id, member.id);
 
         // Member joined a voice channel
         if (!oldChannel && newChannel) {
-            const statsDb = await getMemberStats(member.guild.id, member.id);
             if(!statsDb.voice.channels[newChannel.id]) statsDb.voice.channels[newChannel.id] = new ChannelData({guild_id:newChannel.guild.id, channel_id: newChannel.id, name: newChannel.name});
 
             statsDb.voice.lastChannel = newChannel.id;
             statsDb.voice.channels[newChannel.id].stats.unshift(new ChannelStats({joined: now}));
-            await statsDb.save();
-        };
 
-        // Member left a voice channel
-        if (oldChannel && !newChannel) {
-            const statsDb = await getMemberStats(member.guild.id, member.id);
+
+        } else if (oldChannel && !newChannel) { // Member left a voice channel
             if (!statsDb.voice.channels[oldChannel.id]) statsDb.voice.channels[oldChannel.id] = new ChannelData({ guild_id: oldChannel.guild.id, channel_id: oldChannel.id, name: oldChannel.name });
             let lastCh = statsDb.voice.channels[statsDb.voice.lastChannel]?.stats[0] || undefined;
 
-            if(lastCh && (lastCh?.channel_id !== oldChannel.id)){ // The channel they just left was not their last known VC... Can't track these stats...
+            if (lastCh && (statsDb.voice.lastChannel !== oldChannel.id)){ // The channel they just left was not their last known VC... Can't track these stats...
+                console.log('delete')
                 statsDb.voice.channels[statsDb.voice.lastChannel].stats.splice(0,1);
             };
 
@@ -76,11 +74,47 @@ module.exports = {
 
                 time = now - lastCh.joined;
             };
-
             statsDb.voice.channels[oldChannel.id].stats[0] = lastCh;
 
             statsDb.voice.time += time / 1000; // add time in seconds
-            await statsDb.save();
+        } else { // Member Swapped Voice Channels.
+            //First handle closing their last VC.
+
+            //Verify there's some stats for this channel to prevent future errors.
+            if (!statsDb.voice.channels[oldChannel.id]) statsDb.voice.channels[oldChannel.id] = new ChannelData({ guild_id: oldChannel.guild.id, channel_id: oldChannel.id, name: oldChannel.name });
+            let lastCh = statsDb.voice.channels[statsDb.voice.lastChannel]?.stats[0] || undefined;
+
+            // The channel they just left was not their last saved channel.
+            // Delete the stats on their last known as we have no "end" to go off of.
+            if (lastCh && (statsDb.voice.lastChannel !== oldChannel.id)) {
+                statsDb.voice.channels[statsDb.voice.lastChannel].stats.splice(0, 1);
+            };
+
+            // The user either has no lastCh, or their lastCh was already closed out...
+            // Create a new entry on their just left channel, giving them time from the bots start-up.
+            // // At least they'll have some of their recorded data.
+            if(!lastCh || lastCh.left){
+                lastCh = new ChannelStats({
+                    joined: oldState.client.readyTimestamp,
+                    left: now,
+                    time: time / 1000,
+                });
+                statsDb.voice.channels[oldChannel.id].stats.unshift(lastCh);
+
+            } else {
+                // Otherwise this was their last channel, and we need to close it out.
+
+                lastCh.left = now;
+                lastCh.time = (now - lastCh.joined) / 1000;
+
+                time = now - lastCh.joined;
+                statsDb.voice.channels[oldChannel.id].stats[0] = lastCh;
+
+                statsDb.voice.time += time / 1000; // add time in seconds
+            };
         };
+
+        //Save the data to the DB.
+        await statsDb.save();
     }
 };
