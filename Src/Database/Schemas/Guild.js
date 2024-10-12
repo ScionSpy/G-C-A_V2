@@ -205,4 +205,30 @@ module.exports = class Guild {
         await this.save();
         return this;
     };
+
+
+
+    /**
+     *
+     * @param {Number} limit how many entries to return.
+     * @returns {Array<{ user_id:Number, time: Number }>}
+     */
+    async getVoiceLeaderBoard(limit = 10){
+        let board = await this.#bot.DB._Get("MemberStats", {guild_id: this.id});
+
+        let data = [];
+        for (let x = 0; x < board.length; x++){
+            data.push({user_id:board[x].user_id, time:board[x].voice.time});
+        };
+
+        data.sort((a,b) => { return b-a });
+
+        let leaderboard = [];
+        for(let x = 0; x < data.length; x++){
+            leaderboard.push(data[x]);
+            if(x+1 == limit) break;
+        };
+
+        return { top: leaderboard, total:data.length};
+    };
 };
