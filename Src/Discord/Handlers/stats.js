@@ -78,6 +78,10 @@ module.exports = {
 
             statsDb.voice.time += time / 1000; // add time in seconds
         } else { // Member Swapped Voice Channels.
+
+            let time = now - oldState.client.readyTimestamp;  // add time in seconds
+
+
             //First handle closing their last VC.
 
             //Verify there's some stats for this channel to prevent future errors.
@@ -100,6 +104,7 @@ module.exports = {
                     time: time / 1000,
                 });
                 statsDb.voice.channels[oldChannel.id].stats.unshift(lastCh);
+                statsDb.voice.time += time / 1000; // add time in seconds
 
             } else {
                 // Otherwise this was their last channel, and we need to close it out.
@@ -112,6 +117,13 @@ module.exports = {
 
                 statsDb.voice.time += time / 1000; // add time in seconds
             };
+
+
+            // Now Handle their new channel.
+            if (!statsDb.voice.channels[newChannel.id]) statsDb.voice.channels[newChannel.id] = new ChannelData({ guild_id: newChannel.guild.id, channel_id: newChannel.id, name: newChannel.name });
+
+            statsDb.voice.lastChannel = newChannel.id;
+            statsDb.voice.channels[newChannel.id].stats.unshift(new ChannelStats({ joined: now }));
         };
 
         //Save the data to the DB.
