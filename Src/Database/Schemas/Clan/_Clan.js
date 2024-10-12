@@ -2,31 +2,43 @@ const DB = require('../../index.js');
 const { Clans } = require('../../../WebAPI/Wargaming/index.js');
 const { Ranks } = require('../../../Constants.js');
 const Constants = require('../../../Constants.js');
-const { Collection, Application } = require('discord.js');
+const { Collection } = require('discord.js');
 
 module.exports = class Clan {
 
+    #bot;
     clan_id;
     tag;
     name;
     leader;
     member_ids;
+    #ranks;
+    discord = null;
     IFF = {};
-    //invite;
 
     /**
      *
      * @param {{id:Number}} data clan data to pull.
+     * @param {import('../../../Discord/Structures/BotClient.js')} bot
      * @param {Boolean} preLoad pre-load the data??
      */
-    constructor(data, preLoad){
-        if ((!data || !data.id) && typeof data.id !== "number") throw new Error(`new DB.Clans(data); 'data' must be defined with an 'id' paramater matching a number. got ${typeof data} : ${data}`);
+    constructor(data, bot, preLoad){
+        if ((!data || !data.id) && typeof data.id !== "number") throw new Error(`new DB.Clans(data, bot, preLoad); 'data' must be defined with an 'id' paramater matching a number. got ${typeof data} : ${data}`);
+        if (!bot) throw new Error(`new DB.Clans(data, bot, preLoad); 'data' must be defined with an 'id' paramater matching a number. got ${typeof bot}`);
         this.clan_id = data.id || undefined;
+        this.#bot = bot;
 
         if(preLoad) this._Load();
     };
 
     async setData(data){
+        if(data.discord){
+            if(data.discord.ranks){
+                this.#ranks = data.discord.ranks;
+                delete data.discord.ranks;
+            };
+        };
+
         for(let key in data){
             this[key] = data[key];
         };
@@ -41,6 +53,20 @@ module.exports = class Clan {
         this.name = clan.name;
         this.leader = { id: clan.leader_id, name:clan.leader_name };
         this.member_ids = clan.members_ids;
+
+        let clanData = await DB._Get("Clans", {id: this.clan_id});
+        console.log(clanData);
+        this.IFF = clanData[0]?.relations || {};
+
+        if (clanData[0]?.discord){
+            this.discord = {};
+            let discord = clanData[0].discord;
+            if (discord.id) this.discord.id = discord.id;
+            if (discord.invite) this.discord.invite = discord.invite;
+            if (discord.ranks) this.discord.ranks = discord.ranks;
+
+            if (discord.channels) this.discord.channels = discord.channels;
+        };
 
         return this;
     };
@@ -87,7 +113,7 @@ module.exports = class Clan {
      * @param {Boolean} sort.accepted Sort by number of invites accepted.
      * @returns {Array<InviteLeaderboard>} Recruiter Leaderboard
      */
-    async getRecruiterStats(sort = { name: false, sent: true, accepted: false }) {
+    async getRecruiterStats(sort = { name: false, sent: true, accepted: false, active: false }) {
         if (!this.isGCA()) throw new Error(`Clan.getRecruiterStats(sort = ${JSON.stringify(sort)}); Is not GCA, aborting action!\n`);
         let invites = await this.getInvites();
         let recruiterResults = {};
@@ -97,7 +123,13 @@ module.exports = class Clan {
             let inviter = inv.sender.name;
             if (!recruiterResults[inviter]) recruiterResults[inviter] = {name: inviter, sentInvites: 0, acceptedInvites: 0};
             recruiterResults[inviter].sentInvites++;
-            if(inv.status == "accepted") recruiterResults[inviter].acceptedInvites++;
+            if(inv.status == "accepted"){
+                recruiterResults[inviter].acceptedInvites++;
+                if(sort.active){
+                    if (!recruiterResults[inviter].players) recruiterResults[inviter].players = [];
+                    recruiterResults[inviter].players.push(`${inv.account.name} [Verified=${this.#bot.Players[this.#bot.PlayersIndex.get(inv.account.id)].discord_id ? '✅' : '❌'}] [isGCA=${this.member_ids.includes(inv.account.id) ? '✅' : '❌'}]`);
+                };
+            };
         };
 
         let leaderboard = [];

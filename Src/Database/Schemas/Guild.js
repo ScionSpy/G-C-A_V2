@@ -1,7 +1,12 @@
-const { DEFAULT_PREFIX } = require("../../config.js");
-const { getUser } = require("./User");
-const { GuildMember, Guild } = require('discord.js');
 const DB = require('../index.js');
+
+const GuildMember = require('discord.js').GuildMember;
+const DiscordGuild = require('discord.js').Guild;
+const BotClient = require('../../Discord/Structures/BotClient.js');
+const Clan = require('./Clan/_Clan.js');
+
+
+const { DEFAULT_PREFIX } = require("../../config.js");
 
 /**
  * @typedef {Object} GuildData
@@ -36,80 +41,168 @@ const DB = require('../index.js');
  */
 
 
-class _Guild {
+module.exports = class Guild {
 
+    #bot;
+    #guild;
+    #status; // Wether the bot is in this server or not.
+    id;
     prefix = DEFAULT_PREFIX;
+    channels = {};
 
-    constructor() {
-        this.initializing = true;
-
-    };
+    clan_id;
+    #invite;
+    #clan;
 
     /**
-     *
-     * @param {GuildType} options
+     * @param {DiscordGuild} data
+     * @param {BotClient} bot
+     * @param {Boolean} useSetData Uses 'data' as is, by-passing all checks and setting values as-is. (Good for pre-handeled data!)
      */
-    async create(options) {
-        if (!options.id || typeof options.id !== "string") throw new Error(`Guild class constructor requires an ID! { id:string }`);
+    constructor(data, bot, useSetData) {
+        if (!data || typeof data !== "object") throw new Error(`new Database.Guild(data, bot); {data} must be defined as an object! got ${typeof data} : ${JSON.stringify(data, null, 4)}`);
+        if (!bot || !(bot instanceof BotClient)) throw new Error(`new Database.Guild(data, bot); {bot} must be defined as an instance of {DBotClient}! got ${bot.constructor}`);
+        this.initializing = true;
+        this.#bot = bot;
 
-        for (let key in options) {
-            this[key] = options[key];
+        if(useSetData) return this.#setData(data);
+
+        if (!(data instanceof DiscordGuild)) { // data is not a Discord Guild class.
+            // Verify if we have an ID.
+            if (!data.id || isNaN(data.id)) throw new Error(`new Database.Guild(data, bot); {data} must be an instance of a {discord.Guild} class, or {data.id} must be Number formatted as a string ('1234567890')! got ${typeof data} : ${JSON.stringify(data, null, 4)}`);
+            // We do have an ID, since that's all we've got to work on, let's try to pull this Guild from Discord!
+            return this.#getGuild();
+
+        }; // data is an instance of a Discord Guild class!
+
+        return this.#collectData(data);
+    };
+
+    async #collectData(guild){
+        this.id = guild.id;
+        this.ownerID = guild.ownerID || null;
+        this.#guild = guild;
+        let clan = await DB._Get("Clans", {'discord.id':guild.id});
+        let GuildServer = await DB._Get("GuildSettings", { id:guild.id });
+
+        if(clan[0]){
+            this.#status = clan.status;
+            this.clan_id = clan[0].clan_id;
+            this.#clan = guild.client.Clans[guild.client.ClansIndex.get(this.clan_id.toString())];
+        };
+
+        if (GuildServer[0].discord){
+            if (GuildServer[0].discord.invite) this.#invite = GuildServer[0].discord.invite;
+            if (GuildServer[0].discord.channels) this.channels = GuildServer[0].discord.channels;
         };
 
         delete this.initializing;
-        return await DB._Post("GuildSettings", this);
-    };
-
-    async load(id) {
-        if (!id || typeof id !== "string") throw new Error(`Guild class function 'load' requires an id:string to execute!`);
-
-        let data = await DB._Get("GuildSettings", { id });
-
-        if (data[0]) {
-            delete this.initializing;
-            for (const key in data[0]) {
-                const value = data[0][key];
-                this[key] = value;
-            };
-        };
-
         return this;
     };
 
-    async save(){
-        return await DB._Edit("GuildSettings", {id:this.id}, this);
+    async #setData(data) {
+        if (!data || typeof data !== "object") throw new Error(`Database.Guild.setData(data); {data} must be defined as an object! got ${typeof data} : ${JSON.stringify(data, null, 4)}`);
+
+        for (let key in data) {
+            this[key] = data[key];
+        };
+
+        delete this.initializing;
+        return this;
     };
-};
 
-module.exports = {
+    async save(extras){
+        let data = {
+            active: this.#status || true,
+            id: this.id,
+            prefix: this.prefix,
+            clan_id: this.clan_id || null
+        };
+
+        let discord = {};
+        if (this.#invite) discord.invite = this.#invite;
+        if (this.channels) discord.channels = this.channels;
+
+
+        if (discord.invite || discord.channels) data.discord = discord;
+
+        if(extras){
+            for (let key in extras) {
+                data[key] = extras[key];
+            };
+        };
+        console.log(data);
+
+        let saved = await DB._Edit("GuildSettings", { id: this.id }, data);
+        if (saved) return saved;
+        else throw new Error(`Database.Guild.save(); Error saving Guild to database! ${JSON.stringify(this, null, 4)}\n${saved}`);
+    };
+
+    async #getGuild() {
+        let guild = await this.#bot.guilds.fetch(this.id);
+        if (!guild) throw new Error(`Database.Guild.#getGuild(); No Discord Guild fetched with an id of ${this.id}!\n\n ${err.stack}`);
+        else this.#collectData(guild);
+    };
+
+    async toggleClan(status){
+        if(status === undefined) status = !this.#status;
+        this.#status = status;
+        await this.save();
+        return this;
+    };
+
     /**
-     * @param {import('discord.js').Guild} guild
+     * Binds this Guild to a clan.
+     * @param {*} clanData
+     * @returns
      */
-    getSettings: async (guild) => {
-        if (!guild) throw new Error("Guild is undefined");
-        if (!guild.id) throw new Error("Guild Id is undefined");
+    async setClan(clanData) {
+        let clan = await new Clan(clanData, true);
+        if (!clan) return false;
+        this.#clan = clan;
+        return await this.save();
+    };
 
-        //const cached = cache.get(guild.id);
-        //if (cached) return cached;
+    /**
+     * Fetched this guild's clan.
+     * @returns
+     */
+    async getClan(){
+        return this.#clan;
+    };
 
-        let guildDB = new _Guild();
-        await guildDB.load(guild.id)
-        if (guildDB.initializing) {
-            // save owner details
-            try{
-                let user = await guild.members.fetch(guild.ownerID);
-                await getUser(user);
-            }catch(err){
-                console.error(`Guild.getSettings().getUser(owner) Error gettingUser`, err);
+
+
+    async setInvite(){
+        return false;
+    };
+
+    async getInvite(){
+        return this.#invite;
+    };
+
+    async setWowsCodes(chID){
+        if (!this.channels) this.channels = {};
+
+        if(chID == 'clear' || chID == 'null'){
+            this.channels.codeGiveAways = null;
+            if(this.channels.codeGiveAways){
+                let index = his.#bot.riftChannels.codeGiveAways.indexOf(this.channels.codeGiveAways);
+                this.#bot.riftChannels.codeGiveAways.splice(index, 1);
             };
 
-            // create a new guild model
-            guildDB.create({
-                id: guild.id
-            });
-
+        }else{
+            try{
+                let ch = await this.#guild.channels.cache.get(chID);
+                if (!ch) return new Error(`Guild.setWowsCodes(chID = ${chID}); is not a valid channel on guild ${this.#guild.id}!`);
+                this.channels.codeGiveAways = chID;
+                this.#bot.riftChannels.codeGiveAways.push(ch.id);
+            } catch(err){
+                throw new Error(err.stack);
+            };
         };
-        //cache.add(guild.id, guildData);
-        return guildDB;
-    },
+
+        await this.save();
+        return this;
+    };
 };

@@ -21,6 +21,35 @@ module.exports = class DiscordPlayer extends Player {
         this.needsLoading = true;
     };
 
+    async setDiscordData(data){
+        await this.setData(data);
+        delete this.setData;
+
+        try {
+            let member = await this.#bot.guilds.cache.get(Constants.GCA.discord_id).members.cache.get(this.discord_id);
+            this.#guildMember = member;
+
+        } catch (err) {
+            if (err.message === "Unknown Member") {
+                let player = new Player(this, this.#bot);
+                player = await player.setData(data);
+                return player;
+
+            } else {
+                console.log(JSON.stringify(err, null, 4));
+
+                this.#guildMember = null;
+                throw new Error(`Database.DiscordPlayer.load(); Error! ${err}`);
+            };
+        };
+
+        delete this.needsLoading;
+        delete this.setDiscordData;
+        delete this.load;
+        delete this.loadDiscord;
+        return this;
+    };
+
     async loadDiscord(){
         await this.load();
         delete this.load;
@@ -44,6 +73,7 @@ module.exports = class DiscordPlayer extends Player {
         };
 
         delete this.needsLoading;
+        delete this.setDiscordData;
         delete this.loadDiscord;
         return this;
     };

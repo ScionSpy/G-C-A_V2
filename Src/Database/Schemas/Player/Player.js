@@ -1,4 +1,5 @@
 const Constants = require('../../../Constants.js');
+const { the_faroe_islands } = require('../../../Modules/ClanBattles/Maps/index.js');
 const Database = require('../../core.js');
 
 
@@ -9,6 +10,7 @@ module.exports = class Player extends Database {
 
 
     #bot;
+    #clan;
 
     constructor(Data, client){
         super();
@@ -24,6 +26,59 @@ module.exports = class Player extends Database {
 
         this.needsLoading = true;
     };
+
+
+    async setData(data) {
+        if(data.clan){
+            this.#clan = data.clan.clan;
+            delete data.clan.clan;
+        };
+
+        for (let key in data) {
+            this[key] = data[key];
+        };
+
+        delete this.needsLoading;
+        return this;
+    };
+
+    async getClan(){
+        if (!this.#clan) return false;
+        return this.#clan;
+    };
+
+
+    /**
+     *
+     * @param {import('../../../WebAPI/Wargaming/Calls/ClanData.js').Clan_Member} player Member joining the Clan.
+     * @param {import('../../../WebAPI/Wargaming/Calls/ClanData.js').InviteData} inviteData invite the member joined with.
+     */
+    async _create(player, inviteData){
+        if (typeof player !== "object") throw new Error(`Database.Player.create(player, inviteData); 'player' must be an object! got ${typeof player} : ${player}`);
+        if (typeof inviteData !== "object") throw new Error(`Database.Player.create(player, inviteData); 'inviteData' must be an object! got ${typeof inviteData} : ${inviteData}`);
+
+        let memberData = {
+            active: true,
+            id: player.account_id,
+            clan_id: inviteData.sender.clan_id,
+            name: player.account_name,
+
+            inviter: {
+                id: inviteData.sender.id,
+                name: inviteData.sender.name,
+            },
+
+            clan_role: player.role,
+            clan_joined: player.joined_at,
+            clan_left: null,
+            duration: null,
+            last_logOut: null,
+            last_battle: null,
+            battles: null,
+        };
+    };
+
+
 
     /**
      *
@@ -58,6 +113,7 @@ module.exports = class Player extends Database {
                 id: inviteData.sender.id,
                 name: inviteData.sender.name,
             },
+            discord_id: verifiedData[0].discord_id,
             clan_role: player.role,
             clan_joined: player.joined_at,
             clan_left: null,
