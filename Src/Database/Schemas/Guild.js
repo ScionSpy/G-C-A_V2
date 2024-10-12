@@ -221,7 +221,7 @@ module.exports = class Guild {
             data.push({user_id:board[x].user_id, time:board[x].voice.time});
         };
 
-        data.sort((a,b) => { return b-a });
+        data.sort((a,b) => { return b.time-a.time });
 
         let leaderboard = [];
         for(let x = 0; x < data.length; x++){
