@@ -227,9 +227,9 @@ module.exports = class Guild {
         for (let x = 0; x < board.length; x++){
             let afkTime = 0;
             if (this.#guild && this.#guild.afkChannelID){
-                if (board[x].channels?.[this.#guild.afkChannelID]) afkTime = board[x].channels[this.#guild.afkChannelID].time;
+                if (board[x].voice.channels?.[this.#guild.afkChannelID]) afkTime = board[x].voice.channels[this.#guild.afkChannelID].time;
             };
-
+            
             data.push({user_id:board[x].user_id, time:board[x].voice.time - afkTime});
         };
 
