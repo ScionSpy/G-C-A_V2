@@ -69,10 +69,12 @@ async function getVoiceLeaderboards(message){
         if (board[x].user.length > longest) longest = board[x].user.length;
     };
 
+    let useShort = false;
     for (let x = 0; x < board.length; x++) {
         let player = board[x].user;
-        if(player.length < longest) player = await player.padStart(longest, ' ');
-        list.push(`${player} : ${timeformat(board[x].time)}`);
+        if (player.length < longest) player = await player.padStart(longest, ' ');
+        if (board[x].time > 86400) useShort = true;
+        list.push(`${player} : ${timeformat(board[x].time, useShort)}`);
     };
 
     let embed = new MessageEmbed();

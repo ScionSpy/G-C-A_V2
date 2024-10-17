@@ -225,6 +225,8 @@ let CB_COLLECTED_AT_DUTAION = Date.now();
             postList.push(`{ wins: ${listItem.wins}, losses: ${listItem.losses}, battles: ${listItem.battles}, wlr: ${listItem.wlr}, name: ${listItem.name} }`);
         };
 
+        postList.sort((a,b) => { b.wlr - a.wlr });
+
         postList.push(`\n{ wins: ${total.wins}, losses: ${total.losses}, battles: ${total.wins + total.losses}, wlr: ${total.wlr} }`);
         await ch.send(postList.join("\n"), {code:'js'});
         if (!onlyWLR) await ch.send(await createResultsChart(results[2].list, 'Alpha and Bravo'));
