@@ -63,20 +63,22 @@ module.exports = {
                 lastCh = new ChannelStats({
                     joined: oldState.client.readyTimestamp,
                     left: now,
-                    time: time /1000,
+                    time: Number((time / 1000).toFixed(3)),
                 });
                 statsDb.voice.channels[oldChannel.id].stats.unshift(lastCh);
+
             }else{ //This was their last known VC.
 
                 lastCh.left = now;
-                lastCh.time = (now - lastCh.joined) /1000;
+                lastCh.time = Number(((now - lastCh.joined) / 1000).toFixed(3));
 
 
                 time = now - lastCh.joined;
             };
-            statsDb.voice.channels[oldChannel.id].stats[0] = lastCh;
 
-            statsDb.voice.time += time / 1000; // add time in seconds
+            statsDb.voice.channels[oldChannel.id].stats[0] = lastCh;
+            statsDb.voice.channels[oldChannel.id].time += Number((time / 1000).toFixed(3));
+            statsDb.voice.time += Number((time / 1000).toFixed(3)); // add time in seconds
         } else { // Member Swapped Voice Channels.
 
             let time = now - oldState.client.readyTimestamp;  // add time in seconds
@@ -85,7 +87,7 @@ module.exports = {
             //First handle closing their last VC.
 
             //Verify there's some stats for this channel to prevent future errors.
-            if (!statsDb.voice.channels[oldChannel.id]) statsDb.voice.channels[oldChannel.id] = new ChannelData({ guild_id: oldChannel.guild.id, channel_id: oldChannel.id, name: oldChannel.name });
+            if (!statsDb.voice.channels[oldChannel.id]) statsDb.voice.channels[oldChannel.id] = new ChannelData({ guild_id: oldChannel.guild.id, channel_id: oldChannel.id, name: oldChannel.name});
             let lastCh = statsDb.voice.channels[statsDb.voice.lastChannel]?.stats[0] || undefined;
 
             // The channel they just left was not their last saved channel.
@@ -98,24 +100,28 @@ module.exports = {
             // Create a new entry on their just left channel, giving them time from the bots start-up.
             // // At least they'll have some of their recorded data.
             if(!lastCh || lastCh.left){
+                let saveTime = Number((time / 1000).toFixed(3)); // add time in seconds
+
                 lastCh = new ChannelStats({
                     joined: oldState.client.readyTimestamp,
                     left: now,
-                    time: time / 1000,
+                    time: saveTime,
                 });
+
                 statsDb.voice.channels[oldChannel.id].stats.unshift(lastCh);
-                statsDb.voice.time += time / 1000; // add time in seconds
+                statsDb.voice.channels[oldChannel.id].time += saveTime;
+                statsDb.voice.time += saveTime;
 
             } else {
-                // Otherwise this was their last channel, and we need to close it out.
+                // Otherwise this was their last known channel, and we need to close it out.
 
                 lastCh.left = now;
-                lastCh.time = (now - lastCh.joined) / 1000;
+                lastCh.time = Number(((now - lastCh.joined) / 1000).toFixed(3));
 
                 time = now - lastCh.joined;
                 statsDb.voice.channels[oldChannel.id].stats[0] = lastCh;
-
-                statsDb.voice.time += time / 1000; // add time in seconds
+                statsDb.voice.channels[oldChannel.id].time += Number((time / 1000).toFixed(3));
+                statsDb.voice.time += Number((time /1000).toFixed(3));
             };
 
 
@@ -123,7 +129,7 @@ module.exports = {
             if (!statsDb.voice.channels[newChannel.id]) statsDb.voice.channels[newChannel.id] = new ChannelData({ guild_id: newChannel.guild.id, channel_id: newChannel.id, name: newChannel.name });
 
             statsDb.voice.lastChannel = newChannel.id;
-            statsDb.voice.channels[newChannel.id].stats.unshift(new ChannelStats({ joined: now }));
+            statsDb.voice.channels[newChannel.id].stats.unshift(new ChannelStats({ joined: Date.now() }));
         };
 
         //Save the data to the DB.

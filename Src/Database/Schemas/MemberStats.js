@@ -38,6 +38,7 @@ class ChannelData {
     guild_id = undefined;
     channel_id = undefined;
     name = undefined;
+    time = undefined;
 
     // channel metrics
     stats = [];
@@ -55,7 +56,7 @@ class ChannelData {
         this.guild_id = data.guild_id;
         this.channel_id = data.channel_id;
         this.name = data.name;
-
+        this.time = data.time || 0;
     };
 };
 
