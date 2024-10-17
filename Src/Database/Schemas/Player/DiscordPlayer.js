@@ -79,7 +79,8 @@ module.exports = class DiscordPlayer extends Player {
     };
 
     #cannotEdit(action){
-        return this.#bot.channels.cache.get('1168784020109266954').send(`<@213250789823610880>,\n Cannot edit <@!${this.discord_id}>!\n> ${JSON.stringify(action, null, 4)}`);
+        this.#bot.channels.cache.get('1168784020109266954').send(`<@213250789823610880>,\n Cannot edit <@!${this.discord_id}>!\n> ${JSON.stringify(action, null, 4)}`);
+        throw new Error(`Cannot edit Member!`);
     };
 
     getDiscordUser(){
@@ -133,21 +134,30 @@ module.exports = class DiscordPlayer extends Player {
     };
 
     /**
+     * Adds clan rank to this user.
+     * @returns {Promise<import('discord.js').GuildMember>}
+     */
+    async addMemberRole(rank) {
+        if(!this.clan.id || !rank) return null;
+
+        let clan = await this.getClan();
+        let role = await clan.getDiscordRoles(rank);
+        
+        if(role) return await this.addRoles(role);
+        else return false;
+    };
+
+    /**
      * Removes all clan rank from this user.
      * @returns {Promise<import('discord.js').GuildMember>}
      */
-    async removeMemberRoles(){
-        let pos = this.#bot.RanksIndex[this.clan.rank];
+    async removeMemberRole(rank) {
+        if (!this.clan.id) return null;
 
-        let memberRoles = [];
-        for(let x = 0; x < pos; x++){
-            let discRoleID = this.#bot.Ranks[x].id;
-            if(!discRoleID) continue;
+        let clan = await this.getClan();
+        let roles = await clan.getDiscordRoles(rank);
 
-            memberRoles.push(discRoleID);
-        };
-
-        return await this.removeRoles(memberRoles);
+        return await this.removeRoles(roles);
     };
 
     async editNickname(name, reason) {

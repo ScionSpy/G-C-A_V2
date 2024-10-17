@@ -194,6 +194,22 @@ module.exports = class Clan {
         return res;
     };
 
+    async getDiscordRoles(rank){
+        if(!this.discord.id || !this.#ranks) return null;
+        let roles = [];
+
+        for (let x = 0; x < this.#ranks.length; x++){
+            if(rank){
+                if(this.#ranks[x].tag !== rank) continue;
+                roles.push(this.#ranks[x].id);
+            } else {
+                roles.push(this.#ranks[x].id);
+            };
+        };
+
+        return roles;
+    };
+
 
     //#region Clan.Applications
 

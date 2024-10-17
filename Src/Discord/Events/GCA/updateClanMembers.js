@@ -2,6 +2,7 @@ const { Clans } = require('../../../WebAPI/Wargaming/index');
 const { clan_id } = require('../../../WebAPI/apiConfig.js').Wargaming;
 const Player = require('../../../Database/Schemas/Player/Player.js');
 const { Ranks } = require('../../../Constants.js');
+const DiscordPlayer = require('../../../Database/Schemas/Player/DiscordPlayer.js');
 
 
 /**
@@ -71,13 +72,24 @@ async function addPlayer(bot, member, inviteData, bot) {
     if(newPlayer.includes(member.account_name)) return;
     newPlayer.push(member.account_name);
 
-    let player = new Player({ id: member.account_id }, bot);
-    player = await player.load();
+    let player = bot.Players[bot.PlayersIndex.get(member.id)];
+    if (!player) {
+        let verified = await bot.DB._Get("Verified", {name:member.account_name});
+        if (verified[0]){
+            player = new DiscordPlayer({ id: member.account_id }, bot);
+            player.loadDiscord();
+        } else {
+            player = new Player({ id: member.account_id }, bot);
+            player = await player.load();
+        };
+    };
 
     if(!player.name) player = await player.create(member, inviteData);
-    else await player.toggleClanMember(true, member.role);
+    else{
+        await player.toggleClanMember(true, member.role);
+    };
 
-    //if(player.discord_id) // add roles
+    if(player.discord_id) player.addMemberRole(member.role);
 
     let oldMember = "";
     if(player?.stats?.left) oldMember = {
@@ -109,6 +121,7 @@ async function removePlayer(bot, member) {
     else oldPlayer.push(member.account_name);
 
     let player = bot.Players[bot.PlayersIndex.get(member.id)];
+    if (player.discord_id && player.removeMemberRoles) player.removeMemberRole();
     player.toggleClanMember(false);
 
     //Remove roles
