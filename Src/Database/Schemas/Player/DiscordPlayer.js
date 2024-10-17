@@ -79,7 +79,7 @@ module.exports = class DiscordPlayer extends Player {
     };
 
     #cannotEdit(action){
-        this.#bot.channels.cache.get('1168784020109266954').send(`<@213250789823610880>,\n Cannot edit <@!${this.discord_id}>!\n> ${JSON.stringify(action, null, 4)}`);
+        this.#bot.channels.cache.get('1168784020109266954').send(`<@213250789823610880>,\n Cannot edit <@!${this.discord_id}>!\n\`\`\`js\n${JSON.stringify(action, null, 4)}\`\`\``, {split:true});
         throw new Error(`Cannot edit Member!`);
     };
 
@@ -142,7 +142,7 @@ module.exports = class DiscordPlayer extends Player {
 
         let clan = await this.getClan();
         let role = await clan.getDiscordRoles(rank);
-        
+
         if(role) return await this.addRoles(role);
         else return false;
     };
