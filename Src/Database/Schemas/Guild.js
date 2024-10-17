@@ -43,7 +43,9 @@ const { DEFAULT_PREFIX } = require("../../config.js");
 
 module.exports = class Guild {
 
+    /** @type {BotClient} */
     #bot;
+    /** @type {DiscordGuild} */
     #guild;
     #status; // Wether the bot is in this server or not.
     id;
@@ -78,6 +80,11 @@ module.exports = class Guild {
         return this.#collectData(data);
     };
 
+    /**
+     *
+     * @param {import('discord.js').guild} guild
+     * @returns
+     */
     async #collectData(guild){
         this.id = guild.id;
         this.ownerID = guild.ownerID || null;
@@ -218,7 +225,12 @@ module.exports = class Guild {
 
         let data = [];
         for (let x = 0; x < board.length; x++){
-            data.push({user_id:board[x].user_id, time:board[x].voice.time});
+            let afkTime = 0;
+            if (this.#guild && this.#guild.afkChannelID){
+                if (board[x].channels?.[this.#guild.afkChannelID]) afkTime = board[x].channels[this.#guild.afkChannelID].time;
+            };
+
+            data.push({user_id:board[x].user_id, time:board[x].voice.time - afkTime});
         };
 
         data.sort((a,b) => { return b.time-a.time });
