@@ -66,7 +66,7 @@ module.exports = {
         };
 
         // command lock
-        if (cmd.auth && (message.author.player.clan.tag != "G-C-A" || message.client.RanksIndex[message.author.player.clan.rank].rank < cmd.auth)){
+        if (cmd.auth && (message.author.player.clan.tag != "G-C-A" || message.client.RanksIndex.get(message.author.player.clan.rank).rank < cmd.auth)){
             if(message.author.player.clan.tag != 'G-C-A') return message.channel.send(`You must be a member of G-C-A to execute this command!`);
             if(message.client.RanksIndex[message.author.player.clan.rank].Rank < cmd.auth) return message.channel.send(`You do not hold a high enough rank to execute this Command!\n• Required : ${message.client.RanksIndex[cmd.auth].name}\n•  Current : ${message.client.RanksIndex[message.author.player.clan.rank].name}`);
         };
