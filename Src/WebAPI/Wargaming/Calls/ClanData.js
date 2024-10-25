@@ -291,7 +291,7 @@ module.exports = {
 
         callAPI = async function(query){
 
-            let auth = "hP9sI4SqE7SZR_6PFNrkegcmpaTMFbTYkMXQ6HGZhcjJxXDuvR8cw4MZyPBA5Zp6"; //await DB.getAuthToken({name:"ShadowSpyy"});
+            let auth = Auth_Token; //DB.getAuthToken({name:"ShadowSpyy"});
             let Cookies = `wsauth_token=${auth}`;
 
             let results = await API.makeAPICall('api/recruitment/clan_invites/', query, Cookies);
@@ -384,12 +384,12 @@ module.exports = {
 
 
 
-    getClanBattles: async function(query = 1){
-        let auth = "hP9sI4SqE7SZR_6PFNrkegcmpaTMFbTYkMXQ6HGZhcjJxXDuvR8cw4MZyPBA5Zp6"; //await DB.getAuthToken({name:"ShadowSpyy"});
+    getClanBattles: async function (query = 1) {
+        let auth = Auth_Token; //DB.getAuthToken({name:"ShadowSpyy"});
         let Cookies = `wsauth_token=${auth}`;
 
         let clanBattles = await API.makeAPICall(`api/ladder/battles`, `team=${query}`, Cookies);
-        if (clanBattles == 'Forbidden') throw new Error(`ClanBattles.getClanBattles(); Failed Authorization!`);
+        if (clanBattles == 'Forbidden') throw new Error(`ClanBattles.getClanBattles(); Failed Authorization!`, clanBattles);
 
         return clanBattles;
     },
@@ -409,6 +409,7 @@ module.exports = {
         let body = {user_ids: members};
 
         let results = await API.makeApiCall_POST('api/members/{clan_id}/remove_members/'.replace('{clan_id}', clan_id), body, Cookies);
+        if (results == 'Forbidden') throw new Error(`API.Clans.removeMembers(); Failed Authorization!`, results);
         return results;
     },
 };
