@@ -289,12 +289,18 @@ async function _loadPlayers(bot) {
                 data.stats.distance = memberData.statistics.distance;
             };
 
-            if (memberClanData.clan_id) data.clan = {
-                id: memberClanData.clan_id,
-                joined: memberClanData.joined_at,
-                rank: memberClanData.role,
-                //battles_since_join: memberData?.statistics?.battles - memberObjs[key].battlesAtClanJoin;
-                clan: bot.Clans[bot.ClansIndex.get(memberClanData.clan_id.toString())]
+            if (memberClanData.clan_id){
+                let Clan = await bot.Clans[bot.ClansIndex.get(memberClanData.clan_id.toString())];
+                data.clan = {
+                    id: memberClanData.clan_id,
+                    joined: memberClanData.joined_at,
+                    rank: memberClanData.role,
+                    //battles_since_join: memberData?.statistics?.battles - memberObjs[key].battlesAtClanJoin;
+                };
+                if (Clan){
+                    if (Clan.tag) data.clan.tag = Clan.tag;
+                    data.clan.clan = Clan;
+                };
             };
 
 
