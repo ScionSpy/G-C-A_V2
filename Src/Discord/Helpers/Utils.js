@@ -44,13 +44,13 @@ module.exports = class Utils {
             (days > 0 ? `${days < 10 ? `•${days}` : days} days, ` :  short ? `•• days, ` : '') +
             (hours > 0 ? `${hours < 10 ? `•${hours}` : hours} hrs, ` : `•• hrs, `) +
             (minutes > 0 ? `${minutes < 10 ? `•${minutes}` : minutes} mins, ` : `•• mins, `) +
-            (seconds > 0 ? `${seconds < 10 ? `•${seconds}` : seconds} secs` : `•• secs, `)
+            (seconds > 0 ? `${seconds < 10 ? `•${seconds}` : seconds} secs` : `•• secs`)
         );
         else return (
             (days > 0 ? `${days < 10 ? `•${days}` : days} days, ` : short ? `•• days, ` : '') +
             (hours > 0 ? `${hours < 10 ? `•${hours}` : hours} hours, ` : `•• hours, `) +
             (minutes > 0 ? `${minutes < 10 ? `•${minutes}` : minutes} minutes, ` : `•• minutes, `) +
-            (seconds > 0 ? `${seconds < 10 ? `•${seconds}` : seconds} seconds` : `•• seconds, `)
+            (seconds > 0 ? `${seconds < 10 ? `•${seconds}` : seconds} seconds` : `•• seconds`)
         );
     }
 
