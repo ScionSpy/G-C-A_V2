@@ -87,7 +87,7 @@ async function setEventTimers(client) {
 
     // Verify that the "next Battle" is not after end of season.
     let seasonEnd = new Date(Config.Dates.End);
-    if ((Date.now() + clanBattlesTimer) > seasonEnd.getTime()) return console.log(`<@213250789823610880>, Next ClanBattle timer is greater than endOf CB Season!\n> \`(${Date.now()} + ${clanBattlesTimer}) (= ${(Date.now() + clanBattlesTimer)}) > ${seasonEnd.getTime()}) = ${(Date.now() + clanBattlesTimer) > seasonEnd.getTime()}\``);
+    if ((Date.now() + (clanBattlesTimer - 15600000)) > seasonEnd.getTime()) return console.log(`<@213250789823610880>, Next ClanBattle timer is greater than endOf CB Season!\n> \`(${Date.now()} + ( ${clanBattlesTimer} - 15600000)) (= ${(Date.now() + (clanBattlesTimer - 15600000))}) > ${seasonEnd.getTime()}) = ${(Date.now() + (clanBattlesTimer - 15600000)) > seasonEnd.getTime()}\``);
 
     console.log(`> • Clan Battles timer firing in DD days HH hours MM minutes SS seconds.`
         .replace('DD', Math.floor(clanBattlesTimer / 1000 / 60 / 60 / 24))
@@ -107,7 +107,9 @@ async function setEventTimers(client) {
         setEventTimers(client);
 
     }, clanBattlesTimer);
-
+    // 15,600,000 -> 15600 = 4h 20m
+    // 123427619
+    // 107,827,619 [ 7:30p ]
 
     // clanBattlesTimer = '11:50
     // callToArms = '7:00'
