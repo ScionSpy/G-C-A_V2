@@ -17,6 +17,7 @@ module.exports = async (client, message) => {
 
     if(!message.guild.settings){
         let guildSettings = await new Guild(message.guild, client);
+        /** @type {Guild} */
         message.guild.settings = guildSettings;
     };
 
