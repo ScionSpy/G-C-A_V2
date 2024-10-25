@@ -57,7 +57,8 @@ async function callToArms_Extra(bot) {
         memberCount >= 7
     ) return console.log(`Event: GCA_clanBattles.callToArms(); Event Fired, but there was already a full team in VC.`);
 
-    ch_clanBattles.send(`<@&1126377465741324435>, <@&1126377465741324434>\n> :crossed_swords: Clan Battles start in 5 Minutes! :crossed_swords:\n  We still need ${7 - ch_ReadyLounge.members.size} members to start a division!\n*Tʜɪs ᴛᴇxᴛ ɪs ᴏɴʟʏ ᴛʀᴀᴄᴋɪɴɢ "Rᴇᴀᴅʏ Lᴏᴜɴɢᴇ" ᴅɪsʀᴇɢᴀʀᴅ ɪғ ᴛʜᴇʀᴇ's ᴀ ғᴜʟʟ ᴅɪᴠɪsɪᴏɴ sᴇᴛ-ᴜᴘ ᴀʟʀᴇᴀᴅʏ!*`);
+    // Small Caps
+    ch_clanBattles.send(`<@&1126377465741324435>, <@&1126377465741324434>\n> :crossed_swords: Clan Battles start in 5 Minutes! :crossed_swords:\n  We still need ${7 - ch_ReadyLounge.members.size} members to start a division!\n*Tʜɪs ɪs ᴛʀᴀᴄᴋɪɴɢ "Rᴇᴀᴅʏ Lᴏᴜɴɢᴇ", "Dɪᴠɪsɪᴏɴ 1" ᴀɴᴅ "Dɪᴠɪsɪᴏɴ 2". Dɪsʀᴇɢᴀʀᴅ ɪꜰ ᴛʜᴇʀᴇ's ᴀ ꜰᴜʟʟ ᴅɪᴠɪsɪᴏɴ ᴀʟʀᴇᴀᴅʏ sᴇᴛ⁻ᴜᴘ.*`);
 };
 
 
