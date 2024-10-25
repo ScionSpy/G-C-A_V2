@@ -4,6 +4,8 @@ const { BotClient } = require("./Discord/Structures");
 
 // register extenders
 require("./Discord/Helpers/Extenders/Guild");
+require("./Discord/Helpers/Extenders/GuildChannel");
+require("./Discord/Helpers/Extenders/Message");
 
 
 // initialize client
