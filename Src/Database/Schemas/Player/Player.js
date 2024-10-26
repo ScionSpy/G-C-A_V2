@@ -1,7 +1,6 @@
 const Constants = require('../../../Constants.js');
-const { the_faroe_islands } = require('../../../Modules/ClanBattles/Maps/index.js');
 const Database = require('../../core.js');
-
+const { Clans, Players} = require('../../../WebAPI/Wargaming/index.js');
 
 //ToDo: Create JSDoc
 
@@ -78,6 +77,132 @@ module.exports = class Player extends Database {
         };
     };
 
+
+    async _createPlayer(){
+        if (!this.id && this.name) {
+            let player = await Players.lookup(this.name);
+            if (!player[0]) throw new Error(`Database.Player._createPlayer();    Cannot create player! !{player.id} && {player.name} not found on the WG.API`);
+            if (player[0] !== this.name) throw new Error(`Database.Player._createPlayer();    Cannot create player! {player.name} does not match any specifc name, although does start ${player.list} names!`);
+            this.id = player[0].account_id;
+        } else if (!this.id && !this.name) throw new Error(`Database.Player._createPlayer();    Cannot create player! One of {player.id}(Number) or {player.name}(String) must be defined!`);
+
+        // Fetch data for this ID.
+        // Also creates a "Players" and "Admin" entry.
+        await this.#setData();
+
+        return this;
+    };
+
+    async _load(){
+        let query;
+
+        if (this.id) query = { id: this.id };
+        else if (this.name) query = { name: this.name };
+        else query = { discord_id: this.discord_id };
+
+        let member = this._Get("Players", query);
+        if (!member[0]) return await this._createPlayer();
+
+        this.id = member[0].id;
+
+        await this.#setData(member[0]);
+
+        return this;
+    };
+
+    async #setData(dbMember){
+
+        let playerData = await Players.getDetails(this.id.toString());
+        let player = playerData[0][this.id];
+
+        let playerClanData = await Players.getClanInfo(this.id.toString());
+        let clanData = playerClanData[0][this.id];
+
+        if (!this.name) this.name = player.nickname;
+        this.discord_id = this.discord_id || null;
+        this.clan = null;
+        let stats = {
+            inactive: null,
+            loa: null,
+            created_at: player.created_at,
+            lastBattle: player.last_battle_time,
+            lastLogOut: player.logout_at,
+            //duration: int
+        };
+
+        if (dbMember){
+            stats.inactive = dbMember.inactive || null;
+            stats.loa = dbMember.loa || null;
+        };
+
+        if (!player.hidden_profile) {
+            stats.battles = player.statistics.battles;
+            stats.distance = player.statistics.distance;
+        };
+
+        this.stats = stats;
+
+        if (clanData.clan_id) {
+            let Clan = await this.#bot.Clans[this.#bot.ClansIndex.get(clanData.clan_id.toString())];
+            if (!Clan) {
+                // ToDo: Add clan to Database and Cache.
+                Clan = await Clans.getDetails(clanData.clan_id.toString());
+                Clan = Clan[0][clanData.clan_id]
+            };
+            this.clan = {
+                id: clanData.clan_id,
+                joined: clanData.joined_at,
+                rank: clanData.role,
+            };
+            if (Clan) {
+                if (Clan.tag) this.clan.tag = Clan.tag;
+            };
+        };
+
+        console.log(this.lastModified);
+        // Update database to "Current" info.
+
+        let data = {
+            id: this.id,
+            name: this.name,
+            discord_id: this.discord_id,
+            clan: this.clan,
+            stats: this.stats,
+        };
+
+        await this._Edit("Players", { id: this.id }, data);
+        if (clanData.clan_id) await this.#verifyAdmin();
+
+        let index = this.#bot.Players.length;
+        this.#bot.Players.push(this);
+        this.#bot.PlayersIndex.set(this.id, index);
+        this.#bot.PlayersIndex.set(this.name, index);
+        this.#bot.PlayersIndex.set(this.name.toLowerCase(), index);
+        if (this.discord_id) this.#bot.PlayersIndex.set(this.discord_id, index);
+
+        delete this.needsLoading;
+        return this;
+    };
+
+    async #verifyAdmin(){
+        // Verifiy that this clan is subscribed to the bot.
+        let Clan = await this._Get("Clans", {id: this.clan.id});
+        if (!Clan[0] || !Clan[0].subscribed) return null;
+
+        // Verify this member has an admin sheet under this particular clan.
+        let admin = await this._Get("Admin", { id: this.id, clan_id: this.clan.id });
+        if (!admin[0]) admin = await this._Post("Admin", {
+            id: this.id,
+            clan_id: this.clan.id,
+            name: this.name,
+            discord_exempt: false,
+            dmLocked: false,
+            LoA: [],
+            inactive: [],
+            notes: []
+        });
+        return admin;
+    };
 
 
     /**

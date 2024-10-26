@@ -46,6 +46,8 @@ module.exports = async (client) => {
     //client = await loadMembers(client);
     client = await _loadPlayers(client);
 
+    setTimeout(() => { saveCached(client); }, 1000 * 60 *5); // 5-min delay
+
 
     let clan = new Clans.Clan({ id: clan_id }, this);
     client.Clan = clan;
@@ -291,6 +293,13 @@ async function _loadPlayers(bot) {
 
             if (memberClanData.clan_id){
                 let Clan = await bot.Clans[bot.ClansIndex.get(memberClanData.clan_id.toString())];
+                if (!Clan) {
+                    // ToDo: Update Clans Class similar to new _Players Class.
+
+                    // Temporary hold "Live Data". Do not save into cache!
+                    let ClanData = await ApiClans.getDetails(memberClanData.clan_id.toString());
+                    Clan = ClanData[0][memberClanData.clan_id];
+                };
                 data.clan = {
                     id: memberClanData.clan_id,
                     joined: memberClanData.joined_at,
@@ -299,7 +308,7 @@ async function _loadPlayers(bot) {
                 };
                 if (Clan){
                     if (Clan.tag) data.clan.tag = Clan.tag;
-                    data.clan.clan = Clan;
+                    //data.clan.clan = Clan;
                 };
             };
 
@@ -313,6 +322,7 @@ async function _loadPlayers(bot) {
                 player = new DiscordPlayer(data, bot);
                 player = await player.setDiscordData(data);
             };
+
 
             if (player) bot.Players.push(player);
             else console.log(data);
@@ -332,6 +342,31 @@ async function _loadPlayers(bot) {
     };
 
     console.log(`Loaded ${bot.Players.length} Members to the Cache in ${Date.now() - TIMESTAMP}ms`);
+    return bot;
+};
+
+
+async function saveCached(bot){
+    let TIMESTAMP = Date.now();
+
+    let results = {
+        saved: {
+            //clans:0,
+            players: 0,
+        }
+    };
+    /*for (let x = 0; x < bot.Clans.length; x++) {
+
+    };*/
+
+    for (let x = 0; x < bot.Players.length; x++) {
+        let player = bot.Players[x];
+        await bot.DB._Edit("Players", {id: player.id}, player);
+        results.saved.players++;
+    };
+
+    console.log(results);
+    console.log(`Saved ${JSON.stringify(results.saved)} to the Database in ${Date.now() - TIMESTAMP}ms`);
     return bot;
 };
 

@@ -26,8 +26,11 @@ module.exports = class DiscordPlayer extends Player {
         delete this.setData;
 
         try {
-            let member = await this.#bot.guilds.cache.get(Constants.GCA.discord_id).members.cache.get(this.discord_id);
-            this.#guildMember = member;
+            for (const [key, value] of this.#bot.guilds.cache) {
+                let guild = this.#bot.guilds.cache.get(key);
+                let member = guild.members.cache.get(this.id);
+                if (member) this.#guildMember[key] = member;
+            };
 
         } catch (err) {
             if (err.message === "Unknown Member") {
@@ -50,9 +53,44 @@ module.exports = class DiscordPlayer extends Player {
         return this;
     };
 
+    async _loadDiscord() {
+        await this._load();
+        delete this.load;
+        delete this._load;
+
+        try {
+            for(let key in this.#bot.guilds.cache){
+
+            };
+
+            let member = await this.#bot.users.fetch(this.discord_id);
+            this.#guildMember = member;
+
+        } catch (err) {
+            if (err.message === "Unknown Member") {
+                let player = new Player(this, this.#bot);
+                player = await player._load();
+                return player;
+
+            } else {
+                console.log(JSON.stringify(err, null, 4));
+
+                this.#guildMember = null;
+                throw new Error(`Database.DiscordPlayer._load(); Error! ${err}`);
+            };
+        };
+
+        delete this.needsLoading;
+        delete this.setDiscordData;
+        delete this.loadDiscord;
+        delete this._loadDiscord;
+        return this;
+    };
+
     async loadDiscord(){
         await this.load();
         delete this.load;
+        delete this._load;
 
         try {
             let member = await this.#bot.guilds.cache.get(Constants.GCA.discord_id).members.fetch(this.discord_id);
@@ -75,6 +113,7 @@ module.exports = class DiscordPlayer extends Player {
         delete this.needsLoading;
         delete this.setDiscordData;
         delete this.loadDiscord;
+        delete this._loadDiscord;
         return this;
     };
 
@@ -83,8 +122,9 @@ module.exports = class DiscordPlayer extends Player {
         throw new Error(`Cannot edit Member!`);
     };
 
-    getDiscordUser(){
-        return this.#guildMember;
+    getDiscordUser(guildID){
+        if (guildID) return this.#guildMember[guildID];
+        else return this.#guildMember;
     };
 
     /**
@@ -158,6 +198,10 @@ module.exports = class DiscordPlayer extends Player {
         let roles = await clan.getDiscordRoles(rank);
 
         return await this.removeRoles(roles);
+    };
+
+    async demoteTo(rank){
+
     };
 
     async editNickname(name, reason) {
