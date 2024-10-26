@@ -144,4 +144,27 @@ module.exports = class Utils {
         if (getLength(Second) == 1) Second = `0${Second}`;
         return `${Year}-${Month}-${Day} ${Hour}:${Minute}:${Second} ${options.UTC ? 'UTC' : 'EST'}`;
     };
+
+
+    /**
+     *
+     * @param {Array<String>} array Array to clean.
+     * @param {String} input What to buffer with. (Default: ' ')
+     * @returns Array<Strings>
+     */
+    async prettyLists (array, input = ' '){
+        let cleanArray = [];
+        let longest = 0;
+        for (let x = 0; x < array.length; x++) {
+            if (array[x].length > longest) longest = array.length;
+        };
+
+        for (let x = 0; x < array.length; x++) {
+            let item = array[x].key;
+            if (item.length < longest) item = await item.padStart(longest, input);
+            cleanArray.push(item);
+        };
+
+        return cleanArray;
+    };
 };

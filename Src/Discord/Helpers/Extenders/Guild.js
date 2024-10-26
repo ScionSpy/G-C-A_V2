@@ -1,6 +1,7 @@
 const { Guild } = require("discord.js");
 
 const MEMBER_MENTION = /<?@?!?(\d{17,20})>?/;
+const CHANNEL_MENTION = /<?#?(\d{17,20})>?/;
 
 
 /**
@@ -35,6 +36,36 @@ Guild.prototype.resolveMember = async function (query, exact = false) {
                 x.displayName.toLowerCase().includes(query.toLowerCase())
         );
     }
+};
+
+/**
+ * Resolves a guild channel from search query
+ * @param {string} query
+ * @param {boolean} exact
+ */
+Guild.prototype.resolveChannel = async function (query, exact = false) {
+    if (!query || typeof query !== "string") return;
+
+    // Check if mentioned or ID is passed
+    const patternMatch = query.match(CHANNEL_MENTION);
+    if (patternMatch) {
+        const id = patternMatch[1];
+        const fetched = await this.channels.cache.get(id);
+        if (fetched) return fetched;
+    };
+
+    // Check if exact tag is matched
+    const matchingTags = this.channels.cache.filter((ch) => ch.name === query);
+    if (matchingTags.size === 1) return matchingTags.first();
+
+    // Check for matching username
+    if (!exact) {
+        return this.channels.cache.find(
+            (x) =>
+                x.name === query ||
+                x.name.toLowerCase().includes(query.toLowerCase())
+        );
+    };
 };
 
 /**
