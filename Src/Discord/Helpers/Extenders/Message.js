@@ -4,7 +4,7 @@ const { Message } = require("discord.js");
  * @param {string|import('discord.js').MessagePayload|import('discord.js').MessageOptions} content
  * @param {number} [seconds]
  */
-Message.prototype.safeReply = async function (content, seconds) {
+Message.prototype.safeReply = async function (content, extras = {}) {
     if (!content) return;
     const perms = ["VIEW_CHANNEL", "SEND_MESSAGES"];
     if (content.embeds && content.embeds.length > 0) perms.push("EMBED_LINKS");
@@ -16,8 +16,10 @@ Message.prototype.safeReply = async function (content, seconds) {
     }
 
     try {
-        if (!seconds) return await this.reply(content);
-        const reply = await this.reply(content);
+        if (!extras.seconds) return await this.reply(content, extras);
+        let seconds = extras.seconds;
+        delete extras.seconds
+        const reply = await this.reply(content, extras);
         setTimeout(() => reply.deletable && reply.delete().catch((ex) => { }), seconds * 1000);
     } catch (ex) {
         //this.client.logger.error(`safeReply`, ex);

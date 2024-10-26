@@ -35,6 +35,7 @@ class BotClient extends Client {
             }
         });
 
+        /** @type {import('../../config.js')} */
         this.config = require('../../config.js');
 
         this.commands = [];

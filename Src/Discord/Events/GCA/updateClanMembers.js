@@ -203,6 +203,7 @@ async function updateClanMembers(bot) {
 
                 } else { // Member was demoted...
                     // ToDo: RemoveRoles()
+                    bot.Players[bot.PlayersIndex.get(mem.id)]
                     results.demote.push(update);
 
                 };
@@ -244,7 +245,7 @@ async function updateClanMembers(bot) {
  * @param {import('../../Structures/BotClient.js')} bot
  */
 module.exports = async (bot) => {
-
+    // for (each clan subscribed)
     let results = await updateClanMembers(bot);
 
     if(

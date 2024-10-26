@@ -99,7 +99,7 @@ module.exports = {
     /**
      *
      * @param {String} query Account ID, or list of account ID's seperated with ','
-     * @returns {Array<PlayerDetails>}
+     * @returns {Array<Array<PlayerDetails>>}
      */
     getDetails: async function getPlayerDetails(query) {
         if (typeof query !== "string" || query.length < 10) throw new Error(`WargamingAPI.getPlayerDetails(query)\n  'query' must be a string of clan ID's! got ${typeof query} : ${query} : length(${query.length}) !== 10\n`);
@@ -128,7 +128,7 @@ module.exports = {
      *
      * @param {String} query Account ID, or list of account ID's seperated with ','
      * @param {Boolean} clanExtra Returns player ClanData if they're currently in a clan.
-     * @returns {Array<PlayerClanInfo>}
+     * @returns {Array<Array<PlayerClanInfo>>}
      */
     getClanInfo: async function (query, clanExtra = '') {
         if (typeof query !== "string" || query.length < 10) throw new Error(`WargamingAPI.getPlayerClanInfo(query)\n  'query' must be a string of clan ID's! got ${typeof query} : length(${query.length}) !== 10\n`);

@@ -12,7 +12,7 @@ GuildChannel.prototype.canSendEmbeds = function () {
  * @param {string|import('discord.js').MessagePayload|import('discord.js').MessageOptions} content
  * @param {number} [seconds]
  */
-GuildChannel.prototype.safeSend = async function (content, seconds) {
+GuildChannel.prototype.safeSend = async function (content, extras = {}) {
     if (!content) return;
     if (!this.type === ChannelType.GuildText && !this.type === ChannelType.DM) return;
 
@@ -21,8 +21,10 @@ GuildChannel.prototype.safeSend = async function (content, seconds) {
     if (!this.permissionsFor(this.guild.members.me).has(perms)) return;
 
     try {
-        if (!seconds) return await this.send(content);
-        const reply = await this.send(content);
+        if (!extras.seconds) return await this.send(content, extras);
+        let seconds = extras.seconds;
+        delete extras.seconds
+        const reply = await this.send(content, extras);
         setTimeout(() => reply.deletable && reply.delete().catch((ex) => { }), seconds * 1000);
     } catch (ex) {
         this.client.logger.error(`safeSend`, ex);
