@@ -20,9 +20,9 @@ module.exports = class Database {
      * * In "Offline" mode, no information is saved on the database, nor is it modified.
      * @property {Boolean} ConnectionFailed State of the MongoDB Service.
      */
-    ConnectionFailed = false;
+    #ConnectionFailed = false;
 
-    collectionPrefix = "beta_";
+    #collectionPrefix = "beta_";
 
     constructor(DB = null, prefix){
         if(DB){
@@ -39,10 +39,10 @@ module.exports = class Database {
 
 
         //TODO: Make periodic calls to the Database until it's reconnected.
-        if (this.ConnectionFailed) return false;
+        if (this.#ConnectionFailed) return false;
 
 
-        Collection = this.collectionPrefix + Collection;
+        Collection = this.#collectionPrefix + Collection;
 
         if(Method == "Get"){
             return await this._Get(Collection, Data, Extra);
@@ -78,10 +78,10 @@ module.exports = class Database {
                     let m = '';
                     if (err == 'MongoServerSelectionError: connect ECONNREFUSED 127.0.0.1:27017') {
                         m = 'Check the service: Control Pannel, System+Security/AdminTools/Services/MongoDB Server = "Start"';
-                        ConnectionFailed = true;
+                        this.#ConnectionFailed = true;
                     } else if (err.startsWith('MongoServerSelectionError: 84610000:error:0A000438:SSL') && err.endsWith('SSL alert number 80')) {
                         m = 'Atlas Cluster: IP Not whitelisted.';
-                        ConnectionFailed = true;
+                        this.#ConnectionFailed = true;
                     };
                     rej(`Error Opening Database instance!\n${err}`);
                 };
@@ -141,7 +141,7 @@ module.exports = class Database {
         return await this.#__Open()
             .then((db) => {
                 DB = db;
-                return DB.db().collection(this.collectionPrefix+collection);
+                return DB.db().collection(this.#collectionPrefix+collection);
             })
             .then((collection) => {
                 return collection.find(query).project(project).sort(sort).limit(Number(limit)).toArray();
@@ -172,7 +172,7 @@ module.exports = class Database {
         return await this.#__Open()
             .then((db) => {
                 DB = db;
-                return DB.db().collection(this.collectionPrefix+collection);
+                return DB.db().collection(this.#collectionPrefix+collection);
             })
             .then(async (collection) => {
                 data.createdAt = Date.now();
@@ -204,7 +204,7 @@ module.exports = class Database {
         return await this.#__Open()
             .then((db) => {
                 DB = db;
-                return db.db().collection(this.collectionPrefix+collection);
+                return db.db().collection(this.#collectionPrefix+collection);
             })
             .then((collection) => {
                 newData.lastModified = Date.now();
@@ -246,7 +246,7 @@ module.exports = class Database {
         return await this.#__Open()
             .then((db) => {
                 DB = db;
-                return DB.db().collection(this.collectionPrefix+collection);
+                return DB.db().collection(this.#collectionPrefix+collection);
             })
             .then(async (collection) => {
                 return collection.deleteOne(query);
