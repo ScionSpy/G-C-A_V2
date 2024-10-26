@@ -136,9 +136,3 @@ async function getSettingsEmbed(settings, guild) {
     ];
     embed.addField("Clan Channels", `\`\`\`js\n${ClanChannels.join('\n')}\`\`\``, true);
 };
-
-/*
-🎨 Picture Artist: AOI
-» PIXIV ID: 92677883
-» PICTURE ID: 120377868
-*/

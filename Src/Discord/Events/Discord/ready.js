@@ -364,8 +364,6 @@ async function saveCached(bot){
         await bot.DB._Edit("Players", {id: player.id}, player);
         results.saved.players++;
     };
-
-    console.log(results);
     console.log(`Saved ${JSON.stringify(results.saved)} to the Database in ${Date.now() - TIMESTAMP}ms`);
     return bot;
 };
