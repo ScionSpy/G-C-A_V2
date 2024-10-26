@@ -98,6 +98,8 @@ module.exports = class Guild {
             this.#clan = guild.client.Clans[guild.client.ClansIndex.get(this.clan_id.toString())];
         };
 
+        this.prefix = GuildServer[0].prefix
+
         if (GuildServer[0].discord){
             if (GuildServer[0].discord.invite) this.#invite = GuildServer[0].discord.invite;
             if (GuildServer[0].discord.channels) this.channels = GuildServer[0].discord.channels;
@@ -229,7 +231,7 @@ module.exports = class Guild {
             if (this.#guild && this.#guild.afkChannelID){
                 if (board[x].voice.channels?.[this.#guild.afkChannelID]) afkTime = board[x].voice.channels[this.#guild.afkChannelID].time;
             };
-            
+
             data.push({user_id:board[x].user_id, time:board[x].voice.time - afkTime});
         };
 

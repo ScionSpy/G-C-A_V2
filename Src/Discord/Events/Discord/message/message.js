@@ -45,11 +45,15 @@ module.exports = async (client, message) => {
 
     let prefix;
     for(let x = 0; x < prefixes.length; x++){
-        if(message.content.startsWith(prefixes[x])) prefix = prefixes[x];
+        if(message.content.toLowerCase().startsWith(prefixes[x])){
+            prefix = prefixes[x];
+            break;
+        };
     };
 
     if (message.content && prefix) {
-        const invoke = message.content.replace(`${message.guild.settings.prefix}`, "").split(/\s+/)[0];
+        const invoke = message.content.replace(`${prefix}`, "").split(/\s+/)[0];
+        message.prefix = prefix;
         const cmd = client.getCommand(invoke);
 
         if (cmd) {
